@@ -1,0 +1,25 @@
+/* Adopter-specific styling overrides 
+body {
+    background-color: #eefaff;
+}
+
+h2 {
+    color: #003366;
+}
+
+.page-wrapper {
+    background-color: #ffffff;
+    border: 1px solid #cce7ff;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(0, 51, 102, 0.1);
+}
+
+/* Pet card layout 
+.pet-card {
+    border: 1px solid #99c2ff;
+    background-color: #f2f8ff;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}*/
