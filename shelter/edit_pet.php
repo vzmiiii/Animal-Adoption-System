@@ -63,43 +63,130 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Edit Pet</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/shelter.css">
+    <style>
+        body {
+            background-color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .page-wrapper {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #fce7cd;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        form label {
+            font-weight: 600;
+            display: block;
+            margin-top: 15px;
+        }
+
+        form input[type="text"],
+        form input[type="number"],
+        form textarea,
+        form select,
+        form input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        form textarea {
+            resize: vertical;
+        }
+
+        button[type="submit"] {
+            background-color: #000;
+            color: #fff;
+            padding: 12px 20px;
+            margin-top: 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #333;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #000;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
 
 <?php include('../includes/navbar_shelter.php'); ?>
 
+<div class="page-wrapper">
     <h2>Edit Pet - <?php echo htmlspecialchars($pet['name']); ?></h2>
     <form method="post" enctype="multipart/form-data">
-        <label>Name:</label><br>
-        <input type="text" name="name" value="<?php echo htmlspecialchars($pet['name']); ?>" required><br><br>
+        <label>Name:</label>
+        <input type="text" name="name" value="<?php echo htmlspecialchars($pet['name']); ?>" required>
 
-        <label>Species:</label><br>
-        <input type="text" name="species" value="<?php echo htmlspecialchars($pet['species']); ?>"><br><br>
+        <label>Species:</label>
+        <input type="text" name="species" value="<?php echo htmlspecialchars($pet['species']); ?>">
 
-        <label>Breed:</label><br>
-        <input type="text" name="breed" value="<?php echo htmlspecialchars($pet['breed']); ?>"><br><br>
+        <label>Breed:</label>
+        <input type="text" name="breed" value="<?php echo htmlspecialchars($pet['breed']); ?>">
 
-        <label>Age:</label><br>
-        <input type="number" name="age" value="<?php echo htmlspecialchars($pet['age']); ?>"><br><br>
+        <label>Age:</label>
+        <input type="number" name="age" value="<?php echo htmlspecialchars($pet['age']); ?>">
 
-        <label>Gender:</label><br>
+        <label>Gender:</label>
         <select name="gender">
             <option value="Male" <?php if ($pet['gender'] === 'Male') echo 'selected'; ?>>Male</option>
             <option value="Female" <?php if ($pet['gender'] === 'Female') echo 'selected'; ?>>Female</option>
-        </select><br><br>
+        </select>
 
-        <label>Description:</label><br>
-        <textarea name="description" rows="4" cols="40"><?php echo htmlspecialchars($pet['description']); ?></textarea><br><br>
+        <label>Description:</label>
+        <textarea name="description" rows="4"><?php echo htmlspecialchars($pet['description']); ?></textarea>
 
-        <label>Change Image (optional):</label><br>
-        <input type="file" name="image"><br><br>
+        <label>Change Image (optional):</label>
+        <input type="file" name="image">
 
         <button type="submit">Update Pet</button>
     </form>
+
+    <div class="back-link">
+        <a href="manage_pet_profiles.php">← Back to Manage Pet Profiles</a>
+    </div>
+</div>
+
 </body>
 </html>

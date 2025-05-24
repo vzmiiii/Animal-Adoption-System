@@ -6,12 +6,26 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
 }
 
 include('../db_connection.php');
-
 $shelter_id = $_SESSION['user_id'];
 
-$sql = "SELECT * FROM pets WHERE shelter_id = ? AND status = 'available'";
+// Pagination settings
+$limit = 6;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
+$offset = ($page - 1) * $limit;
+
+// Count total pets
+$count_sql = "SELECT COUNT(*) as total FROM pets WHERE shelter_id = ? AND status = 'available'";
+$count_stmt = $conn->prepare($count_sql);
+$count_stmt->bind_param("i", $shelter_id);
+$count_stmt->execute();
+$count_result = $count_stmt->get_result();
+$total_pets = $count_result->fetch_assoc()['total'];
+$total_pages = ceil($total_pets / $limit);
+
+// Fetch pets with limit
+$sql = "SELECT * FROM pets WHERE shelter_id = ? AND status = 'available' LIMIT ? OFFSET ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $shelter_id);
+$stmt->bind_param("iii", $shelter_id, $limit, $offset);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -44,7 +58,7 @@ $result = $stmt->get_result();
 
         .pet-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 30px;
         }
 
@@ -101,6 +115,26 @@ $result = $stmt->get_result();
             color: #000;
             font-weight: 500;
         }
+
+        .pagination {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .pagination a {
+            margin: 0 8px;
+            padding: 8px 14px;
+            background-color: #eee;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .pagination a.active {
+            background-color: #000;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -108,12 +142,12 @@ $result = $stmt->get_result();
 <?php include('../includes/navbar_shelter.php'); ?>
 
 <div class="page-wrapper">
-    <h2>📂 Manage My Pet Listings</h2>
+    <h2>Manage My Pet Listings</h2>
     <a href="dashboard.php" class="top-link">← Back to Dashboard</a>
 
     <div class="pet-grid">
         <?php if ($result->num_rows > 0): ?>
-            <?php while($pet = $result->fetch_assoc()): ?>
+            <?php while ($pet = $result->fetch_assoc()): ?>
                 <div class="pet-card">
                     <?php if (!empty($pet['image'])): ?>
                         <img src="../images/pets/<?php echo htmlspecialchars($pet['image']); ?>" alt="Pet image">
@@ -134,6 +168,14 @@ $result = $stmt->get_result();
             <p style="text-align:center;">You haven't added any available pets yet.</p>
         <?php endif; ?>
     </div>
+
+    <?php if ($total_pages > 1): ?>
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <a href="?page=<?php echo $i; ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php include('../includes/footer.php'); ?>

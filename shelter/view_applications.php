@@ -79,7 +79,7 @@ body {
 <?php include('../includes/navbar_shelter.php'); ?>
 
 <div class="page-wrapper">
-    <h2>Adoption Applications for Your Pets</h2>
+    <h2>Review Applications</h2>
 
     <?php if ($result->num_rows > 0): ?>
         <div class="table-container">

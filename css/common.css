@@ -18,19 +18,21 @@ h1, h2, h3 {
 .navbar {
     background-color: #e5e5e5;
     padding: 12px 30px;
-    width: 1470px;
+    width: 100%; /* instead of fixed 1470px */
     height: 50px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-family: 'Segoe UI', sans-serif;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-sizing: border-box;
 }
 
 .navbar .logo {
     font-weight: bold;
     font-size: 18px;
     color: #111;
+    white-space: nowrap; /* ✅ Prevents wrapping */
 }
 
 .navbar nav {
