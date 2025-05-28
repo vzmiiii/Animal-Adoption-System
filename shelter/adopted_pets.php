@@ -96,7 +96,7 @@ $result = $stmt->get_result();
                         Species: <?php echo htmlspecialchars($pet['species']); ?><br>
                         Breed: <?php echo htmlspecialchars($pet['breed']); ?><br>
                         Adopted on: <?php echo htmlspecialchars($pet['adoption_date']); ?><br><br>
-                        <a href="follow_up_history.php?pet_id=<?php echo $pet['pet_id']; ?>" class="black-btn">View Follow-Up History</a>
+                        <a href="follow_up_history.php?pet_id=<?php echo $pet['id']; ?>" class="black-btn">View Follow-Up History</a>
                     </div>
                 </div>
             <?php endwhile; ?>

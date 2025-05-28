@@ -32,9 +32,26 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
 
         .dashboard-box h2 {
             font-size: 30px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             font-weight: bold;
             color: #111;
+        }
+
+        .notif-link {
+            font-size: 14px;
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #000;
+            font-weight: bold;
+            border: 1px solid #000;
+            padding: 10px 18px;
+            border-radius: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .notif-link:hover {
+            background-color: #fff;
         }
 
         .dashboard-box ul {
@@ -75,15 +92,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
 <div class="dashboard-box">
     <h2>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?> (Shelter)</h2>
 
+    <a href="notifications.php" class="notif-link">🔔 View All Notifications</a>
+
     <ul>
         <li><a href="add_pet.php">➕ Add New Pet</a></li>
         <li><a href="manage_pet_profiles.php">📂 Manage Pet Profiles</a></li>
         <li><a href="adopted_pets.php">✅ View Adopted Pets</a></li>
         <li><a href="view_applications.php">📋 View Adoption Applications</a></li>
+        <li><a href="interview_requests.php">📅 Interview Requests</a></li>
+        <li><a href="scheduled_interviews.php">📅 Interview Schedule</a></li>
         <li><a href="follow_up_reminders.php">📨 Send Follow-Up Reminders</a></li>
         <li><a href="follow_up_history.php">🕓 Follow-Up History</a></li>
         <li><a href="setting.php">⚙️ My Settings</a></li>
-        <li><a href="logout.php">🚪 Logout</a></li>
+        <li><a href="/animal_adoption_system/logout.php">🚪 Logout</a></li>
     </ul>
 </div>
 

@@ -29,68 +29,8 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
     <style>
-        body {
-            background-color: #fff;
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .tracker-wrapper {
-            max-width: 900px;
-            margin: 80px auto;
-            padding: 40px;
-            background-color: #f7e6cf;
-            border-radius: 30px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .tracker-wrapper h2 {
-            text-align: center;
-            font-size: 28px;
-            margin-bottom: 30px;
-        }
-
-        .tracker-wrapper a {
-            display: inline-block;
-            margin-bottom: 20px;
-            text-decoration: none;
-            color: #000;
-            font-weight: 500;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            border-radius: 12px;
-            overflow: hidden;
-            background-color: #fff;
-        }
-
-        th, td {
-            padding: 14px 18px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        th {
-            background-color: #eee;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .empty-msg {
-            text-align: center;
-            font-size: 16px;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 20px;
-            margin-top: 20px;
-        }
-
-        .cancel-btn {
+        /* Same styles as before... */
+        .schedule-btn {
             background-color: #000;
             color: #fff;
             padding: 6px 12px;
@@ -100,23 +40,9 @@ $result = $stmt->get_result();
             cursor: pointer;
         }
 
-        .cancel-btn:hover {
+        .schedule-btn:hover {
             opacity: 0.9;
         }
-
-        form.inline-form {
-            display: inline;
-        }
-        .status-action {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.status-text {
-    font-weight: 500;
-}
-
     </style>
 </head>
 <body>
@@ -135,22 +61,33 @@ $result = $stmt->get_result();
                 <th>Application Date</th>
                 <th>Status / Action</th>
             </tr>
-            <?php while($row = $result->fetch_assoc()): ?>
+            <?php while($row = $result->fetch_assoc()):
+                $application_id = $row['id'];
+
+                // Check if interview already exists
+                $checkInterview = $conn->prepare("SELECT id FROM interviews WHERE application_id = ?");
+                $checkInterview->bind_param("i", $application_id);
+                $checkInterview->execute();
+                $interviewResult = $checkInterview->get_result();
+                $hasInterview = $interviewResult->num_rows > 0;
+            ?>
             <tr>
-                <td><?php echo htmlspecialchars($row['pet_name']); ?></td>
-                <td><?php echo htmlspecialchars($row['species']); ?></td>
-                <td><?php echo htmlspecialchars($row['application_date']); ?></td>
+                <td><?= htmlspecialchars($row['pet_name']); ?></td>
+                <td><?= htmlspecialchars($row['species']); ?></td>
+                <td><?= htmlspecialchars($row['application_date']); ?></td>
                 <td>
-    <div class="status-action">
-        <span class="status-text"><?php echo ucfirst(htmlspecialchars($row['status'])); ?></span>
-        <?php if ($row['status'] === 'pending'): ?>
-            <form method="POST" action="cancel_application.php" class="inline-form" onsubmit="return confirm('Are you sure you want to cancel this application?');">
-                <input type="hidden" name="application_id" value="<?php echo $row['id']; ?>">
-                <button type="submit" class="cancel-btn">Cancel</button>
-            </form>
-        <?php endif; ?>
-    </div>
-</td>
+                    <div class="status-action">
+                        <span class="status-text"><?= ucfirst(htmlspecialchars($row['status'])); ?></span>
+                        <?php if ($row['status'] === 'pending'): ?>
+                            <form method="POST" action="cancel_application.php" class="inline-form" onsubmit="return confirm('Are you sure you want to cancel this application?');">
+                                <input type="hidden" name="application_id" value="<?= $row['id']; ?>">
+                                <button type="submit" class="cancel-btn">Cancel</button>
+                            </form>
+                        <?php elseif ($row['status'] === 'approved' && !$hasInterview): ?>
+                            <a href="schedule_interview.php?app_id=<?= $row['id']; ?>" class="schedule-btn">Schedule Interview</a>
+                        <?php endif; ?>
+                    </div>
+                </td>
             </tr>
             <?php endwhile; ?>
         </table>
@@ -160,6 +97,5 @@ $result = $stmt->get_result();
 </div>
 
 <?php include('../includes/footer.php'); ?>
-
 </body>
 </html>

@@ -36,9 +36,26 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
 
         .dashboard-box h2 {
             font-size: 30px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             font-weight: bold;
             color: #111;
+        }
+
+        .notif-link {
+            font-size: 14px;
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #000;
+            font-weight: bold;
+            border: 1px solid #000;
+            padding: 10px 18px;
+            border-radius: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .notif-link:hover {
+            background-color: #fff;
         }
 
         .dashboard-box ul {
@@ -86,16 +103,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
 <div class="dashboard-box">
     <h2>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h2>
 
+    <a href="notifications.php" class="notif-link">🔔 View All Notifications</a>
+
     <ul>
         <li>
-            <a href=browse_available_pets.php>🐾 Browse Available Pets</a>
+            <a href="browse_available_pets.php">🐾 Browse Available Pets</a>
         </li>
         <li>
-            <a href="adoption_tracker.php">📋 Track My Applications</a>
+            <a href="adoption_tracker.php">📋 Adoption Tracker</a>
         </li>
         <li>
-            <a href="cancel_application.php">❌ Cancel Application</a>
-            <small>(or cancel via tracker)</small>
+            <a href="interview_status.php">📅 Interview Status</a>
         </li>
         <li>
             <a href="followup_messages.php">📩 Follow-Up Messages</a>

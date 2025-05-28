@@ -14,29 +14,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $home_type = $_POST['home_type'];
     $experience = $_POST['experience'];
     $has_kids = $_POST['has_kids'];
+    $preferred_gender = $_POST['preferred_gender'];
+    $preferred_age = $_POST['preferred_age'];
+    $noise_level = $_POST['noise_level'];
+    $likes_cuddle = $_POST['likes_cuddle'];
 
     $sql = "SELECT * FROM pets WHERE status = 'available'";
 
-    // Lifestyle preference
     if ($lifestyle === "active") {
         $sql .= " AND species = 'Dog'";
     } elseif ($lifestyle === "quiet") {
         $sql .= " AND species = 'Cat'";
     }
 
-    // Home type logic — assume large/older dogs not ideal for apartments
     if ($home_type === "apartment") {
         $sql .= " AND (species != 'Dog' OR age <= 5)";
     }
 
-    // Pet experience — first-time owners get younger pets
     if ($experience === "first_time") {
         $sql .= " AND age <= 3";
     }
 
-    // Good with kids — we assume pets under age 5 are gentler
     if ($has_kids === "yes") {
         $sql .= " AND age <= 5";
+    }
+
+    if ($preferred_gender !== "no_pref") {
+        $sql .= " AND gender = '" . $conn->real_escape_string($preferred_gender) . "'";
+    }
+
+    if ($preferred_age === "young") {
+        $sql .= " AND age <= 2";
+    } elseif ($preferred_age === "adult") {
+        $sql .= " AND age > 2 AND age <= 7";
+    } elseif ($preferred_age === "senior") {
+        $sql .= " AND age > 7";
+    }
+
+    if ($noise_level === "quiet") {
+        $sql .= " AND species = 'Cat'";
+    }
+
+    if ($likes_cuddle === "yes") {
+        $sql .= " AND age <= 4";
     }
 
     $result = $conn->query($sql);
@@ -140,6 +160,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <option value="no">No</option>
         </select>
 
+        <label>Preferred Pet Gender:</label>
+        <select name="preferred_gender" required>
+            <option value="no_pref">No Preference</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+
+        <label>Preferred Pet Age:</label>
+        <select name="preferred_age" required>
+            <option value="young">0–2 years</option>
+            <option value="adult">3–7 years</option>
+            <option value="senior">8+ years</option>
+        </select>
+
+        <label>Do You Prefer a Quiet Pet?</label>
+        <select name="noise_level" required>
+            <option value="quiet">Yes, I prefer quiet pets</option>
+            <option value="any">No preference</option>
+        </select>
+
+        <label>Do You Want a Pet That Likes to Cuddle?</label>
+        <select name="likes_cuddle" required>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select>
+
         <button type="submit">Get Recommendations</button>
     </form>
 
@@ -162,3 +208,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <?php include('../includes/footer.php'); ?>
 </body>
 </html>
+
