@@ -16,7 +16,7 @@ h1, h2, h3 {
 
 /* NAVBAR */
 .navbar {
-    background-color: #e5e5e5;
+    background-color: #d5d0b0;
     padding: 12px 30px;
     width: 100%; /* instead of fixed 1470px */
     height: 50px;
@@ -53,7 +53,7 @@ h1, h2, h3 {
 
 /* Footer styles */
 .footer {
-    background-color: #f2f2f2;
+    background-color: #d5d0b0;
     text-align: center;
     padding: 15px;
     font-size: 14px;

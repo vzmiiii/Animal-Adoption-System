@@ -1,19 +1,26 @@
 <?php
 session_start();
+
+// Ensure the user is logged in and is an adopter
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
     header("Location: ../login.php");
     exit();
 }
+
 include('../db_connection.php');
 
 $user_id = $_SESSION['user_id'];
+$msg = "";
 
+// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $first_name = $_POST['first_name'];
-    $last_name = $_POST['last_name'];
-    $phone = $_POST['phone_number'];
+    // Sanitize inputs
+    $first_name = trim($_POST['first_name']);
+    $last_name = trim($_POST['last_name']);
+    $phone = trim($_POST['phone_number']);
 
-    $sql = "UPDATE users SET first_name=?, last_name=?, phone_number=? WHERE id=?";
+    // Update only editable fields (not username/email here)
+    $sql = "UPDATE users SET first_name = ?, last_name = ?, phone_number = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sssi", $first_name, $last_name, $phone, $user_id);
     $stmt->execute();
@@ -21,7 +28,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $msg = "✅ Profile updated successfully.";
 }
 
-$sql = "SELECT * FROM users WHERE id=?";
+// Fetch latest user info
+$sql = "SELECT * FROM users WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -44,7 +52,8 @@ $user = $result->fetch_assoc();
         }
 
         .settings-wrapper {
-            max-width: 600px;
+            width: 60%;
+            max-width: 700px;
             margin: 80px auto;
             background-color: #f7e6cf;
             padding: 40px;
@@ -105,25 +114,32 @@ $user = $result->fetch_assoc();
 <div class="settings-wrapper">
     <h2>⚙️ My Settings</h2>
 
+    <!-- Show message if profile is updated -->
     <?php if (!empty($msg)): ?>
-        <div class="success-msg"><?php echo $msg; ?></div>
+        <div class="success-msg"><?php echo htmlspecialchars($msg); ?></div>
     <?php endif; ?>
 
+    <!-- Settings form -->
     <form method="post">
+        <!-- Username (readonly for now) -->
         <label>Username:</label>
-        <input type="text" name="username" required value="<?php echo htmlspecialchars($user['username']); ?>">
+        <input type="text" name="username" readonly value="<?php echo htmlspecialchars($user['username']); ?>">
 
+        <!-- First Name -->
         <label>First Name:</label>
         <input type="text" name="first_name" required value="<?php echo htmlspecialchars($user['first_name']); ?>">
 
+        <!-- Last Name -->
         <label>Last Name:</label>
         <input type="text" name="last_name" required value="<?php echo htmlspecialchars($user['last_name']); ?>">
 
+        <!-- Phone Number -->
         <label>Phone Number:</label>
         <input type="text" name="phone_number" required value="<?php echo htmlspecialchars($user['phone_number']); ?>">
 
+        <!-- Email (readonly for now) -->
         <label>Email:</label>
-        <input type="text" name="emailr" required value="<?php echo htmlspecialchars($user['email']); ?>">
+        <input type="text" name="email" readonly value="<?php echo htmlspecialchars($user['email']); ?>">
 
         <button type="submit">Update</button>
     </form>

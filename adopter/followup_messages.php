@@ -9,11 +9,13 @@ include('../db_connection.php');
 
 $adopter_id = $_SESSION['user_id'];
 
-$sql = "SELECT f.*, p.name AS pet_name
+// Fetch follow-up messages, pet name, and shelter username
+$sql = "SELECT f.*, p.name AS pet_name, u.username AS shelter_name
         FROM follow_ups f
         JOIN pets p ON f.pet_id = p.id
+        JOIN users u ON p.shelter_id = u.id
         WHERE f.adopter_id = ?
-        ORDER BY f.sent_at DESC";
+        ORDER BY f.sent_at ASC";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $adopter_id);
@@ -36,7 +38,7 @@ $result = $stmt->get_result();
         }
 
         .followup-wrapper {
-            max-width: 800px;
+            max-width: 900px;
             margin: 80px auto;
             padding: 40px;
             background-color: #f7e6cf;
@@ -97,8 +99,9 @@ $result = $stmt->get_result();
         <?php while($row = $result->fetch_assoc()): ?>
             <div class="message-card">
                 <p><strong>Pet:</strong> <?php echo htmlspecialchars($row['pet_name']); ?></p>
+                <p><strong>Shelter:</strong> <?php echo htmlspecialchars($row['shelter_name']); ?></p>
                 <p><strong>Message:</strong><br><?php echo nl2br(htmlspecialchars($row['message'])); ?></p>
-                <p><small>Sent at: <?php echo htmlspecialchars($row['sent_at']); ?></small></p>
+                <p><small>Sent at: <?php echo date("F j, Y, g:i A", strtotime($row['sent_at'])); ?></small></p>
             </div>
         <?php endwhile; ?>
     <?php else: ?>

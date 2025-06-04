@@ -1,5 +1,6 @@
 <?php
 session_start();
+// Ensure user is adopter
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
     header("Location: ../login.php");
     exit();
@@ -10,6 +11,7 @@ include('../db_connection.php');
 $suggestions = [];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Collect answers
     $lifestyle = $_POST['lifestyle'];
     $home_type = $_POST['home_type'];
     $experience = $_POST['experience'];
@@ -21,28 +23,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $sql = "SELECT * FROM pets WHERE status = 'available'";
 
+    // Lifestyle affects species
     if ($lifestyle === "active") {
         $sql .= " AND species = 'Dog'";
     } elseif ($lifestyle === "quiet") {
         $sql .= " AND species = 'Cat'";
     }
 
-    if ($home_type === "apartment") {
-        $sql .= " AND (species != 'Dog' OR age <= 5)";
+    // Home type affects species and age/size compatibility
+    if (in_array($home_type, ["highrise", "flat"])) {
+        $sql .= " AND (species != 'Dog' OR age <= 5)"; // no large dogs in small homes
     }
 
+    // Experience level affects ease of handling
     if ($experience === "first_time") {
         $sql .= " AND age <= 3";
     }
 
+    // Kids should be paired with younger, gentler pets
     if ($has_kids === "yes") {
         $sql .= " AND age <= 5";
     }
 
+    // Gender preference
     if ($preferred_gender !== "no_pref") {
         $sql .= " AND gender = '" . $conn->real_escape_string($preferred_gender) . "'";
     }
 
+    // Age range
     if ($preferred_age === "young") {
         $sql .= " AND age <= 2";
     } elseif ($preferred_age === "adult") {
@@ -51,14 +59,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql .= " AND age > 7";
     }
 
+    // Noise preference
     if ($noise_level === "quiet") {
         $sql .= " AND species = 'Cat'";
     }
 
+    // Cuddly pets assumed to be younger and calmer
     if ($likes_cuddle === "yes") {
         $sql .= " AND age <= 4";
     }
 
+    // Execute query
     $result = $conn->query($sql);
     while ($row = $result->fetch_assoc()) {
         $suggestions[] = $row;
@@ -67,47 +78,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Compatibility Quiz</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
     <style>
         body {
-            background-color: #ffffff;
             margin: 0;
+            background-color: #ffffff;
             font-family: 'Segoe UI', sans-serif;
         }
 
         .page-wrapper {
-            max-width: 800px;
-            margin: 60px auto;
-            padding: 40px;
-            background-color: #f7e6cf;
-            border-radius: 30px;
+            width: 50%;
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 40px 50px;
+            background-color: #f9f9f9;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 30px;
         }
 
         form label {
-            font-weight: bold;
             display: block;
-            margin: 15px 0 5px;
+            font-weight: 600;
+            margin: 20px 0 8px;
         }
 
-        form select, form button {
+        form select,
+        form button {
             width: 100%;
             padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 12px;
+            border-radius: 10px;
+            font-size: 15px;
             border: 1px solid #ccc;
-            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        form button {
+            background-color: #000;
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
         }
 
         .pet-card {
             background-color: #fff;
             border-radius: 20px;
             padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-top: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
         }
 
         .pet-card img {
@@ -126,15 +155,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding: 10px 16px;
             border-radius: 20px;
             text-decoration: none;
-            font-size: 13px;
+            font-size: 14px;
+        }
+
+        p {
+            font-style: italic;
+            color: #555;
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
+
 <?php include('../includes/navbar_adopter.php'); ?>
 
 <div class="page-wrapper">
     <h2>🧩 Compatibility Quiz</h2>
+
     <form method="post">
         <label>Your Lifestyle:</label>
         <select name="lifestyle" required>
@@ -144,8 +181,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <label>Your Home Type:</label>
         <select name="home_type" required>
-            <option value="apartment">Apartment</option>
-            <option value="house">House with Yard</option>
+            <option value="bungalow">Bungalow</option>
+            <option value="terrace">Terrace</option>
+            <option value="highrise">High-Rise Apartment</option>
+            <option value="flat">Flat</option>
         </select>
 
         <label>Pet Experience Level:</label>
@@ -193,7 +232,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <h3>Recommended Pets:</h3>
         <?php foreach ($suggestions as $pet): ?>
             <div class="pet-card">
-                <strong><?php echo htmlspecialchars($pet['name']); ?></strong> (<?php echo htmlspecialchars($pet['species']); ?>)<br>
+                <strong><?php echo htmlspecialchars($pet['name']); ?></strong>
+                (<?php echo htmlspecialchars($pet['species']); ?>)<br>
                 <?php if (!empty($pet['image'])): ?>
                     <img src="../images/pets/<?php echo $pet['image']; ?>" alt="Pet image"><br>
                 <?php endif; ?>
@@ -208,4 +248,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <?php include('../includes/footer.php'); ?>
 </body>
 </html>
-

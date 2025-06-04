@@ -1,5 +1,7 @@
 <?php
 session_start();
+
+// Redirect user to login if not authenticated or not an adopter
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
     header("Location: ../login.php");
     exit();
@@ -9,11 +11,12 @@ include('../db_connection.php');
 
 $adopter_id = $_SESSION['user_id'];
 
+// Fetch adopter's applications with corresponding pet info
 $sql = "SELECT aa.*, p.name AS pet_name, p.species
         FROM adoption_applications aa
         JOIN pets p ON aa.pet_id = p.id
         WHERE aa.adopter_id = ?
-        ORDER BY aa.application_date DESC";
+        ORDER BY aa.application_date ASC";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $adopter_id);
@@ -29,7 +32,60 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
     <style>
-        /* Same styles as before... */
+        /* Page wrapper - wider and centered */
+        .tracker-wrapper {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.06);
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f9f9f9;
+            font-weight: bold;
+        }
+
+        .status-action {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .status-text {
+            font-weight: 500;
+        }
+
+        .cancel-btn {
+            background-color: #ff4d4d;
+            color: #fff;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background-color: #e60000;
+        }
+
         .schedule-btn {
             background-color: #000;
             color: #fff;
@@ -42,6 +98,26 @@ $result = $stmt->get_result();
 
         .schedule-btn:hover {
             opacity: 0.9;
+        }
+
+        .inline-form {
+            display: inline;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #777;
+            margin-top: 40px;
+            font-style: italic;
+        }
+
+        a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -64,7 +140,7 @@ $result = $stmt->get_result();
             <?php while($row = $result->fetch_assoc()):
                 $application_id = $row['id'];
 
-                // Check if interview already exists
+                // Check if an interview has been scheduled
                 $checkInterview = $conn->prepare("SELECT id FROM interviews WHERE application_id = ?");
                 $checkInterview->bind_param("i", $application_id);
                 $checkInterview->execute();
@@ -78,12 +154,15 @@ $result = $stmt->get_result();
                 <td>
                     <div class="status-action">
                         <span class="status-text"><?= ucfirst(htmlspecialchars($row['status'])); ?></span>
+
                         <?php if ($row['status'] === 'pending'): ?>
+                            <!-- Cancel pending application -->
                             <form method="POST" action="cancel_application.php" class="inline-form" onsubmit="return confirm('Are you sure you want to cancel this application?');">
                                 <input type="hidden" name="application_id" value="<?= $row['id']; ?>">
                                 <button type="submit" class="cancel-btn">Cancel</button>
                             </form>
                         <?php elseif ($row['status'] === 'approved' && !$hasInterview): ?>
+                            <!-- Schedule interview for approved application -->
                             <a href="schedule_interview.php?app_id=<?= $row['id']; ?>" class="schedule-btn">Schedule Interview</a>
                         <?php endif; ?>
                     </div>

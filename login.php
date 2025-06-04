@@ -2,29 +2,36 @@
 session_start();
 include('db_connection.php');
 
+// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
+    // Trim and sanitize input
+    $email = trim($_POST['email']);
     $password = $_POST['password'];
 
+    // Prepare SQL to find user by email
     $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $stmt->store_result();
 
+    // Check if user exists
     if ($stmt->num_rows == 1) {
         $stmt->bind_result($id, $username, $hashed_password, $role);
         $stmt->fetch();
 
+        // Verify password
         if (password_verify($password, $hashed_password)) {
+            // Set session variables
             $_SESSION['user_id'] = $id;
             $_SESSION['username'] = $username;
             $_SESSION['role'] = $role;
 
-            if ($role == 'adopter') {
+            // Redirect based on user role
+            if ($role === 'adopter') {
                 header("Location: adopter/dashboard.php");
-            } elseif ($role == 'shelter') {
+            } elseif ($role === 'shelter') {
                 header("Location: shelter/dashboard.php");
-            } elseif ($role == 'admin') {
+            } elseif ($role === 'admin') {
                 header("Location: admin/dashboard.php");
             }
             exit();
@@ -42,6 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <title>Login - Animal Adoption System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobile responsive -->
     <link rel="stylesheet" href="css/common.css">
     <style>
         .login-container {
@@ -101,17 +109,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="login-container">
     <h2>Welcome Back!</h2>
 
-    <?php if (!empty($error)) echo "<div class='error'>$error</div>"; ?>
+    <!-- Display error if any -->
+    <?php if (!empty($error)) echo "<div class='error'>" . htmlspecialchars($error) . "</div>"; ?>
 
+    <!-- Login form -->
     <form method="post">
         <input type="email" name="email" placeholder="Email" required>
         <input type="password" name="password" placeholder="Password" required>
-
         <button type="submit">Adopt Now</button>
     </form>
 
+    <!-- Additional links -->
     <div style="margin-top: 10px;">
-        <a href="#">Forgot Password?</a><br>
         <span>Don't have an account? <a href="register.php">Register here!</a></span>
     </div>
 </div>
