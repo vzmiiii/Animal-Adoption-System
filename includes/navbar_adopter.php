@@ -28,6 +28,7 @@ $unread_count = $notif_result['unread'];
     </div>
     <nav>
         <a href="/animal_adoption_system/adopter/dashboard.php">Home</a>
+        <a href="/animal_adoption_system/adopter/faq.php">FAQ</a>
         <a href="/animal_adoption_system/adopter/notifications.php">🔔 Notifications (<?= $unread_count ?>)</a>
         <a href="/animal_adoption_system/adopter/setting.php">Settings</a>
         <a href="/animal_adoption_system/logout.php">Log Out</a>

@@ -4,20 +4,19 @@
         <div class="logo">Animal Adoption System - Admin</div>
     </div>
     <nav class="right-nav">
-        <a href="/animal_adoption_system/admin/admin_dashboard.php">Dashboard</a>
+        <a href="/animal_adoption_system/admin/dashboard.php">Dashboard</a>
         <a href="/animal_adoption_system/admin/manage_users.php">Manage Users</a>
         <a href="/animal_adoption_system/admin/manage_pets.php">Manage Pets</a>
         <a href="/animal_adoption_system/admin/view_all_applications.php">Applications</a>
         <a href="/animal_adoption_system/admin/manage_shelters.php">Shelters</a>
         <a href="/animal_adoption_system/admin/notifications_admin.php">Notifications</a>
-        <!-- <a href="/animal_adoption_system/admin/system_logs.php">Logs</a> --> <!-- optional -->
         <a href="/animal_adoption_system/logout.php">Logout</a>
     </nav>
 </div>
 
 <style>
 .navbar {
-    background-color: #e5e5e5;
+    background-color: #d5d0b0;
     display: flex;
     justify-content: space-between;
     align-items: center;

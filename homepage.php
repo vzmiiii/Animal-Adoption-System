@@ -161,7 +161,7 @@
 <div class="hero">
     <div class="hero-text">
         <h1>Find your perfect<br>companion today!</h1>
-        <a href="browse_available_pets.php">Adopt Now</a>
+        <a href="register.php">Adopt Now</a>
     </div>
     <div class="hero-image">
         <img src="images/home/hero-dog.jpg" alt="Shelter dogs">

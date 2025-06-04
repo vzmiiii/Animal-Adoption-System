@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 include('../db_connection.php');
 
-$sql = "SELECT a.id, a.status, a.submitted_at,
+$sql = "SELECT a.id, a.status, a.application_date,
                u.username AS adopter_name,
                p.name AS pet_name,
                s.username AS shelter_name
@@ -14,7 +14,7 @@ $sql = "SELECT a.id, a.status, a.submitted_at,
         JOIN users u ON a.adopter_id = u.id
         JOIN pets p ON a.pet_id = p.id
         JOIN users s ON p.shelter_id = s.id
-        ORDER BY a.submitted_at DESC";
+        ORDER BY a.application_date DESC";
 
 $result = $conn->query($sql);
 ?>
@@ -70,11 +70,12 @@ $result = $conn->query($sql);
                 <td><?= htmlspecialchars($row['pet_name']) ?></td>
                 <td><?= htmlspecialchars($row['shelter_name']) ?></td>
                 <td class="status-<?= strtolower($row['status']) ?>"><?= ucfirst($row['status']) ?></td>
-                <td><?= date('Y-m-d H:i', strtotime($row['submitted_at'])) ?></td>
+                <td><?= date('Y-m-d', strtotime($row['application_date'])) ?></td>
             </tr>
         <?php endwhile; ?>
         </tbody>
     </table>
 </div>
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

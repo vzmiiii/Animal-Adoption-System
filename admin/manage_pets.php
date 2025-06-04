@@ -6,13 +6,25 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 include('../db_connection.php');
 
+// Sorting logic
+$order_by = isset($_GET['sort']) ? $_GET['sort'] : 'id';
+$order_dir = isset($_GET['dir']) && $_GET['dir'] === 'desc' ? 'DESC' : 'ASC';
+
+$allowed_sort = ['id', 'name', 'species', 'breed', 'age', 'gender', 'status', 'shelter_name'];
+$order_by = in_array($order_by, $allowed_sort) ? $order_by : 'id';
+
 $sql = "SELECT pets.id, pets.name, pets.species, pets.breed, pets.age, pets.gender, pets.status,
                shelters.username AS shelter_name
         FROM pets
         JOIN users shelters ON pets.shelter_id = shelters.id
-        ORDER BY pets.status, pets.name";
+        ORDER BY $order_by $order_dir, pets.name ASC";
 
 $result = $conn->query($sql);
+
+// Toggle sorting direction
+function toggleDir($currentDir) {
+    return $currentDir === 'asc' ? 'desc' : 'asc';
+}
 ?>
 
 <!DOCTYPE html>
@@ -39,10 +51,17 @@ $result = $conn->query($sql);
         th {
             background-color: #f5f5f5;
         }
+        th a {
+            text-decoration: none;
+            color: inherit;
+        }
         .actions a {
             margin-right: 10px;
             text-decoration: none;
             color: #007bff;
+        }
+        .actions a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -55,14 +74,13 @@ $result = $conn->query($sql);
     <table>
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Pet Name</th>
-                <th>Species</th>
-                <th>Breed</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Status</th>
-                <th>Shelter</th>
+                <?php foreach ($allowed_sort as $column): ?>
+                    <th>
+                        <a href="?sort=<?= $column ?>&dir=<?= toggleDir($order_dir) ?>">
+                            <?= ucwords(str_replace('_', ' ', $column)) ?>
+                        </a>
+                    </th>
+                <?php endforeach; ?>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -71,11 +89,11 @@ $result = $conn->query($sql);
             <tr>
                 <td><?= $row['id'] ?></td>
                 <td><?= htmlspecialchars($row['name']) ?></td>
-                <td><?= $row['species'] ?></td>
-                <td><?= $row['breed'] ?></td>
+                <td><?= htmlspecialchars($row['species']) ?></td>
+                <td><?= htmlspecialchars($row['breed']) ?></td>
                 <td><?= $row['age'] ?></td>
-                <td><?= $row['gender'] ?></td>
-                <td><?= ucfirst($row['status']) ?></td>
+                <td><?= htmlspecialchars($row['gender']) ?></td>
+                <td><?= ucfirst(htmlspecialchars($row['status'])) ?></td>
                 <td><?= htmlspecialchars($row['shelter_name']) ?></td>
                 <td class="actions">
                     <a href="edit_pet.php?id=<?= $row['id'] ?>">Edit</a>
@@ -86,5 +104,6 @@ $result = $conn->query($sql);
         </tbody>
     </table>
 </div>
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

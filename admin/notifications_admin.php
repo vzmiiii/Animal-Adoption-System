@@ -85,5 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit">Send Notification</button>
     </form>
 </div>
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

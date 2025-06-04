@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="css/common.css">
     <style>
         .login-container {
-            background-color: #f7e6cf;
+            background-color: #f5f5f5;
             max-width: 400px;
             margin: 100px auto;
             padding: 40px;
