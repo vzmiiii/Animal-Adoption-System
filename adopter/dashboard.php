@@ -110,6 +110,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
             <a href="browse_available_pets.php">🐾 Browse Available Pets</a>
         </li>
         <li>
+            <a href="compatibility_quiz.php">🧩 Take Compatibility Quiz</a>
+        </li>
+        <li>
             <a href="adoption_tracker.php">📋 Adoption Tracker</a>
         </li>
         <li>
@@ -117,9 +120,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
         </li>
         <li>
             <a href="followup_messages.php">📩 Follow-Up Messages</a>
-        </li>
-        <li>
-            <a href="compatibility_quiz.php">🧩 Take Compatibility Quiz</a>
         </li>
         <li>
             <a href="setting.php">⚙️ My Settings</a>

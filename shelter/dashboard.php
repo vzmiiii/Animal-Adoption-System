@@ -95,8 +95,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
     <a href="notifications.php" class="notif-link">🔔 View All Notifications</a>
 
     <ul>
-        <li><a href="add_pet.php">➕ Add New Pet</a></li>
         <li><a href="manage_pet_profiles.php">📂 Manage Pet Profiles</a></li>
+        <li><a href="add_pet.php">➕ Add New Pet</a></li>
         <li><a href="adopted_pets.php">✅ View Adopted Pets</a></li>
         <li><a href="view_applications.php">📋 View Adoption Applications</a></li>
         <li><a href="interview_requests.php">📅 Interview Requests</a></li>
