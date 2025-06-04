@@ -1,172 +1,252 @@
 <?php
 session_start();
+
+// Restrict access: only allow shelter users
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
     header("Location: ../login.php");
     exit();
 }
+
 include('../db_connection.php');
 
 $shelter_id = $_SESSION['user_id'];
 
-// Handle status update if form submitted
+// -------------------------------------------------------------
+// Handle POST: updating interview status (confirm or reject)
+// -------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['interview_id'], $_POST['action'])) {
     $interview_id = intval($_POST['interview_id']);
     $action = $_POST['action'];
 
-    if (in_array($action, ['confirm', 'reject'])) {
-        $new_status = $action === 'confirm' ? 'confirmed' : 'rejected';
-        $update = $conn->prepare("UPDATE interviews SET status = ? WHERE id = ? AND shelter_id = ?");
-        $update->bind_param("sii", $new_status, $interview_id, $shelter_id);
-        $update->execute();
+    if (in_array($action, ['confirm', 'reject'], true)) {
+        $new_status = ($action === 'confirm') ? 'confirmed' : 'rejected';
 
-        // Fetch adopter ID and pet name
-        $infoQuery = $conn->prepare("SELECT adopter_id, pet_id FROM interviews WHERE id = ?");
-        $infoQuery->bind_param("i", $interview_id);
-        $infoQuery->execute();
-        $info = $infoQuery->get_result()->fetch_assoc();
+        // Update the interview record for this shelter
+        $updateStmt = $conn->prepare("
+            UPDATE interviews 
+            SET status = ? 
+            WHERE id = ? AND shelter_id = ?
+        ");
+        $updateStmt->bind_param("sii", $new_status, $interview_id, $shelter_id);
+        $updateStmt->execute();
+        $updateStmt->close();
 
-        $petQuery = $conn->prepare("SELECT name FROM pets WHERE id = ?");
-        $petQuery->bind_param("i", $info['pet_id']);
-        $petQuery->execute();
-        $pet = $petQuery->get_result()->fetch_assoc();
+        // Fetch the adopter_id and pet_id to send notification
+        $infoStmt = $conn->prepare("
+            SELECT adopter_id, pet_id 
+            FROM interviews 
+            WHERE id = ?
+        ");
+        $infoStmt->bind_param("i", $interview_id);
+        $infoStmt->execute();
+        $info = $infoStmt->get_result()->fetch_assoc();
+        $infoStmt->close();
 
-        $message = "Your interview for pet '" . $pet['name'] . "' was " . $new_status . ".";
+        // Fetch pet name for the message
+        $petStmt = $conn->prepare("
+            SELECT name 
+            FROM pets 
+            WHERE id = ?
+        ");
+        $petStmt->bind_param("i", $info['pet_id']);
+        $petStmt->execute();
+        $pet = $petStmt->get_result()->fetch_assoc();
+        $petStmt->close();
 
-        $notif = $conn->prepare("INSERT INTO notifications (user_id, role, message) VALUES (?, 'adopter', ?)");
-        $notif->bind_param("is", $info['adopter_id'], $message);
-        $notif->execute();
+        // Compose notification message
+        $messageText = "Your interview for pet \"" . htmlspecialchars($pet['name']) . "\" was " . $new_status . ".";
 
+        // Insert notification into notifications table for the adopter
+        $notifStmt = $conn->prepare("
+            INSERT INTO notifications (user_id, role, message) 
+            VALUES (?, 'adopter', ?)
+        ");
+        $notifStmt->bind_param("is", $info['adopter_id'], $messageText);
+        $notifStmt->execute();
+        $notifStmt->close();
+
+        // Redirect back to refresh the listing
         header("Location: interview_requests.php");
         exit();
     }
 }
 
-// Fetch interview requests
-$sql = "SELECT i.*, u.username AS adopter_name, p.name AS pet_name
-        FROM interviews i
-        JOIN users u ON i.adopter_id = u.id
-        JOIN pets p ON i.pet_id = p.id
-        WHERE i.shelter_id = ?
-        ORDER BY i.interview_datetime ASC";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $shelter_id);
-$stmt->execute();
-$result = $stmt->get_result();
+// -------------------------------------------------------------
+// Fetch all interview requests for this shelter
+// -------------------------------------------------------------
+$listSql = "
+    SELECT 
+        i.id,
+        i.interview_datetime,
+        i.status,
+        u.username AS adopter_name,
+        p.name   AS pet_name
+    FROM interviews i
+    JOIN users u ON i.adopter_id = u.id
+    JOIN pets  p ON i.pet_id     = p.id
+    WHERE i.shelter_id = ?
+    ORDER BY i.interview_datetime ASC
+";
+$listStmt = $conn->prepare($listSql);
+$listStmt->bind_param("i", $shelter_id);
+$listStmt->execute();
+$result = $listStmt->get_result();
+$listStmt->close();
 ?>
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Interview Requests</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/shelter.css">
     <style>
+        /* Base styles */
         body {
-            background-color: #fff;
-            font-family: 'Segoe UI', sans-serif;
             margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
         }
 
-        .tracker-wrapper {
+        /* Container for the entire content */
+        .page-wrapper {
             max-width: 900px;
             margin: 80px auto;
-            padding: 40px;
-            background-color: #fce7cd;
-            border-radius: 30px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+            padding: 32px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e0e0e0;
+            
         }
 
         h2 {
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 28px;
+            margin-bottom: 24px;
+            font-size: 26px;
+            font-weight: 600;
         }
 
+        /* Table styling */
         table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #fff;
-            border-radius: 10px;
+            margin-top: 16px;
+            background-color: #fafafa;
+            border-radius: 8px;
             overflow: hidden;
         }
 
         th, td {
-            padding: 14px;
-            border-bottom: 1px solid #ddd;
+            padding: 12px 16px;
             text-align: left;
         }
 
         th {
-            background-color: #eee;
+            background-color: #f0f0f0;
+            font-weight: 500;
         }
 
-        td form {
-            display: inline-block;
-            margin-right: 8px;
+        tr + tr td {
+            border-top: 1px solid #e0e0e0;
         }
 
-        button {
+        /* Action buttons (Confirm / Reject) */
+        .action-btn {
             background-color: #000;
-            color: white;
+            color: #fff;
             border: none;
-            padding: 6px 10px;
-            border-radius: 5px;
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 14px;
         }
 
-        button:hover {
+        .action-btn:hover {
             opacity: 0.9;
         }
 
+        /* Status text when already handled */
         .status-text {
             font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .page-wrapper {
+                margin: 40px 16px;
+                padding: 24px;
+            }
+
+            th, td {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            h2 {
+                font-size: 22px;
+            }
         }
     </style>
 </head>
 <body>
 
-<?php include('../includes/navbar_shelter.php'); ?>
+    <!-- Navbar (shelter version) -->
+    <?php include('../includes/navbar_shelter.php'); ?>
 
-<div class="tracker-wrapper">
-    <h2>📨 Interview Requests</h2>
+    <div class="page-wrapper">
+        <h2>📨 Interview Requests</h2>
 
-    <?php if ($result->num_rows > 0): ?>
-        <table>
-            <tr>
-                <th>Adopter</th>
-                <th>Pet</th>
-                <th>Scheduled At</th>
-                <th>Status / Action</th>
-            </tr>
-            <?php while ($row = $result->fetch_assoc()): ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['adopter_name']) ?></td>
-                    <td><?= htmlspecialchars($row['pet_name']) ?></td>
-                    <td><?= date("d M Y, h:i A", strtotime($row['interview_datetime'])) ?></td>
-                    <td>
-                        <?php if ($row['status'] === 'pending'): ?>
-                            <form method="POST" onsubmit="return confirm('Confirm this interview?');">
-                                <input type="hidden" name="interview_id" value="<?= $row['id']; ?>">
-                                <input type="hidden" name="action" value="confirm">
-                                <button type="submit">✅ Confirm</button>
-                            </form>
-                            <form method="POST" onsubmit="return confirm('Reject this interview?');">
-                                <input type="hidden" name="interview_id" value="<?= $row['id']; ?>">
-                                <input type="hidden" name="action" value="reject">
-                                <button type="submit">❌ Reject</button>
-                            </form>
-                        <?php else: ?>
-                            <span class="status-text"><?= ucfirst($row['status']) ?></span>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
-        </table>
-    <?php else: ?>
-        <p>No interview requests yet.</p>
-    <?php endif; ?>
-</div>
+        <?php if ($result->num_rows > 0): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Adopter</th>
+                        <th>Pet</th>
+                        <th>Scheduled At</th>
+                        <th>Status / Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['adopter_name']); ?></td>
+                            <td><?= htmlspecialchars($row['pet_name']); ?></td>
+                            <td>
+                                <?php
+                                    // Format the interview date/time
+                                    echo date("d M Y, h:i A", strtotime($row['interview_datetime']));
+                                ?>
+                            </td>
+                            <td>
+                                <?php if ($row['status'] === 'pending'): ?>
+                                    <!-- Confirm button -->
+                                    <form method="POST" style="display:inline-block;" onsubmit="return confirm('Confirm this interview?');">
+                                        <input type="hidden" name="interview_id" value="<?= $row['id']; ?>">
+                                        <input type="hidden" name="action" value="confirm">
+                                        <button type="submit" class="action-btn">✅ Confirm</button>
+                                    </form>
 
+                                    <!-- Reject button -->
+                                    <form method="POST" style="display:inline-block;" onsubmit="return confirm('Reject this interview?');">
+                                        <input type="hidden" name="interview_id" value="<?= $row['id']; ?>">
+                                        <input type="hidden" name="action" value="reject">
+                                        <button type="submit" class="action-btn">❌ Reject</button>
+                                    </form>
+                                <?php else: ?>
+                                    <!-- Show status text if already confirmed/rejected -->
+                                    <span class="status-text"><?= htmlspecialchars($row['status']); ?></span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p style="text-align: center; margin-top: 24px;">No interview requests yet.</p>
+        <?php endif; ?>
+    </div>
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

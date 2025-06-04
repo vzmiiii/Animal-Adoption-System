@@ -1,16 +1,18 @@
 <?php
 session_start();
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
     header("Location: ../login.php");
     exit();
 }
+
 include('../db_connection.php');
 
 $user_id = $_SESSION['user_id'];
 $role = 'shelter';
 
-// SELECT notifications
-$sql = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND role = ? ORDER BY created_at DESC");
+// Fetch notifications
+$sql = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND role = ? ORDER BY created_at ASC");
 if (!$sql) {
     die("Prepare failed: " . $conn->error);
 }
@@ -18,7 +20,7 @@ $sql->bind_param("is", $user_id, $role);
 $sql->execute();
 $result = $sql->get_result();
 
-// UPDATE notifications to mark as read
+// Mark notifications as read
 $update = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND role = ?");
 if ($update) {
     $update->bind_param("is", $user_id, $role);
@@ -26,43 +28,59 @@ if ($update) {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>My Notifications</title>
     <link rel="stylesheet" href="../css/common.css">
     <style>
         body {
-            background-color: #fff;
+            margin: 0;
             font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
         }
+
         .notif-box {
             max-width: 700px;
-            margin: 80px auto;
+            margin: 100px auto;
             padding: 40px;
-            background-color: #f7e6cf;
+            background-color: #ffffff;
             border-radius: 30px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
         }
+
         h2 {
             text-align: center;
             font-size: 28px;
             margin-bottom: 30px;
         }
+
         ul {
             list-style: none;
-            padding-left: 0;
+            padding: 0;
         }
+
         li {
             background: #fff;
-            margin-bottom: 10px;
-            padding: 15px 20px;
+            margin-bottom: 12px;
+            padding: 16px 20px;
             border-radius: 12px;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
             font-size: 15px;
         }
+
         em {
             font-size: 12px;
             color: #888;
+            display: block;
+            margin-top: 6px;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -77,15 +95,16 @@ if ($update) {
             <?php while ($n = $result->fetch_assoc()): ?>
                 <li>
                     <?= htmlspecialchars($n['message']) ?>
-                    <br><em><?= date("d M Y, h:i A", strtotime($n['created_at'])) ?></em>
+                    <em><?= date("d M Y, h:i A", strtotime($n['created_at'])) ?></em>
                 </li>
             <?php endwhile; ?>
         <?php else: ?>
-            <li>No notifications at the moment.</li>
+            <li class="empty-msg">No notifications at the moment.</li>
         <?php endif; ?>
     </ul>
 </div>
 
 <?php include('../includes/footer.php'); ?>
+
 </body>
 </html>

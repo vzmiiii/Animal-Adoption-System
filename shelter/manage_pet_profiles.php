@@ -8,12 +8,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
 include('../db_connection.php');
 $shelter_id = $_SESSION['user_id'];
 
-// Pagination settings
+// Pagination
 $limit = 6;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
 $offset = ($page - 1) * $limit;
 
-// Count total pets
+// Count pets
 $count_sql = "SELECT COUNT(*) as total FROM pets WHERE shelter_id = ? AND status = 'available'";
 $count_stmt = $conn->prepare($count_sql);
 $count_stmt->bind_param("i", $shelter_id);
@@ -22,7 +22,7 @@ $count_result = $count_stmt->get_result();
 $total_pets = $count_result->fetch_assoc()['total'];
 $total_pages = ceil($total_pets / $limit);
 
-// Fetch pets with limit
+// Fetch pet records
 $sql = "SELECT * FROM pets WHERE shelter_id = ? AND status = 'available' LIMIT ? OFFSET ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("iii", $shelter_id, $limit, $offset);
@@ -38,22 +38,52 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/shelter.css">
     <style>
+        * {
+            box-sizing: border-box;
+            outline: none !important;
+        }
+
         body {
-            background-color: #fff;
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            border: none;
+            outline: none;
         }
 
         .page-wrapper {
             max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
+            background-color: transparent;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
         }
 
         h2 {
             text-align: center;
             font-size: 28px;
+            margin-bottom: 20px;
+            color: #222;
+        }
+
+        .top-link {
+            display: block;
+            text-align: center;
             margin-bottom: 30px;
+            font-size: 14px;
+            color: #333;
+            padding: 10px 18px;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .top-link:hover {
+            background-color: #e4e4e4;
         }
 
         .pet-grid {
@@ -63,10 +93,13 @@ $result = $stmt->get_result();
         }
 
         .pet-card {
-            background-color: #f7e6cf;
-            border-radius: 20px;
+            background-color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
             padding: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
         }
 
         .pet-card img {
@@ -78,8 +111,9 @@ $result = $stmt->get_result();
         }
 
         .pet-card h3 {
-            margin: 0 0 6px;
+            margin: 0 0 8px;
             font-size: 18px;
+            color: #111;
         }
 
         .pet-card p {
@@ -87,12 +121,14 @@ $result = $stmt->get_result();
             font-size: 14px;
         }
 
-        .pet-card .actions {
-            margin-top: 12px;
+        .actions {
+            margin-top: auto;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        .pet-card a.button {
-            display: inline-block;
+        .button {
             background-color: #000;
             color: #fff;
             padding: 10px 16px;
@@ -100,40 +136,53 @@ $result = $stmt->get_result();
             font-size: 13px;
             font-weight: bold;
             text-decoration: none;
-            margin-right: 10px;
+            transition: background-color 0.2s ease;
         }
 
-        .pet-card a.button:hover {
+        .button:hover {
             background-color: #222;
         }
 
-        .top-link {
-            display: block;
-            text-align: center;
-            margin-bottom: 25px;
-            text-decoration: none;
-            color: #000;
-            font-weight: 500;
-        }
-
         .pagination {
+            margin-top: 40px;
             text-align: center;
-            margin-top: 30px;
         }
 
         .pagination a {
-            margin: 0 8px;
+            margin: 0 6px;
             padding: 8px 14px;
             background-color: #eee;
             border-radius: 6px;
             text-decoration: none;
             color: #000;
             font-weight: bold;
+            transition: all 0.2s ease;
         }
 
         .pagination a.active {
             background-color: #000;
             color: #fff;
+        }
+
+        @media (max-width: 992px) {
+            .pet-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .pet-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+
+            .top-link {
+                font-size: 13px;
+                padding: 8px 14px;
+            }
         }
     </style>
 </head>
@@ -165,7 +214,7 @@ $result = $stmt->get_result();
                 </div>
             <?php endwhile; ?>
         <?php else: ?>
-            <p style="text-align:center;">You haven't added any available pets yet.</p>
+            <p style="text-align:center;">You haven’t added any available pets yet.</p>
         <?php endif; ?>
     </div>
 
@@ -182,4 +231,3 @@ $result = $stmt->get_result();
 
 </body>
 </html>
-

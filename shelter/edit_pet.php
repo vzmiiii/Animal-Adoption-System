@@ -70,32 +70,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/shelter.css">
     <style>
-        body {
-            background-color: #ffffff;
-            font-family: 'Segoe UI', sans-serif;
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
             margin: 0;
             padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex: 1;
+            padding: 40px 20px;
         }
 
         .page-wrapper {
-            max-width: 600px;
-            margin: 40px auto;
-            background-color: #fce7cd;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: auto;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid #e0e0e0;
         }
 
         h2 {
             text-align: center;
-            color: #333;
             margin-bottom: 30px;
+            font-size: 26px;
+            font-weight: 600;
         }
 
         form label {
-            font-weight: 600;
             display: block;
-            margin-top: 15px;
+            margin-top: 16px;
+            font-weight: 600;
         }
 
         form input[type="text"],
@@ -106,10 +123,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 100%;
             padding: 10px;
             margin-top: 6px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
             font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        form input:focus,
+        form select:focus,
+        form textarea:focus {
+            border-color: #888;
+            outline: none;
+        }
+
+        form input:focus-visible,
+        form textarea:focus-visible,
+        form select:focus-visible {
+            outline: none;
         }
 
         form textarea {
@@ -117,15 +147,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         button[type="submit"] {
+            width: 100%;
             background-color: #000;
             color: #fff;
-            padding: 12px 20px;
-            margin-top: 25px;
-            border: none;
-            border-radius: 6px;
+            padding: 12px;
+            margin-top: 30px;
             font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
-            width: 100%;
             transition: background-color 0.3s ease;
         }
 
@@ -139,9 +170,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .back-link a {
-            color: #000;
             text-decoration: none;
-            font-weight: bold;
+            color: #000;
+            font-weight: 600;
         }
 
         .back-link a:hover {
@@ -153,40 +184,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <?php include('../includes/navbar_shelter.php'); ?>
 
-<div class="page-wrapper">
-    <h2>Edit Pet - <?php echo htmlspecialchars($pet['name']); ?></h2>
-    <form method="post" enctype="multipart/form-data">
-        <label>Name:</label>
-        <input type="text" name="name" value="<?php echo htmlspecialchars($pet['name']); ?>" required>
+<div class="content">
+    <div class="page-wrapper">
+        <h2>Edit Pet - <?php echo htmlspecialchars($pet['name']); ?></h2>
+        <form method="post" enctype="multipart/form-data">
+            <label>Name:</label>
+            <input type="text" name="name" value="<?php echo htmlspecialchars($pet['name']); ?>" required>
 
-        <label>Species:</label>
-        <input type="text" name="species" value="<?php echo htmlspecialchars($pet['species']); ?>">
+            <label>Species:</label>
+            <input type="text" name="species" value="<?php echo htmlspecialchars($pet['species']); ?>">
 
-        <label>Breed:</label>
-        <input type="text" name="breed" value="<?php echo htmlspecialchars($pet['breed']); ?>">
+            <label>Breed:</label>
+            <input type="text" name="breed" value="<?php echo htmlspecialchars($pet['breed']); ?>">
 
-        <label>Age:</label>
-        <input type="number" name="age" value="<?php echo htmlspecialchars($pet['age']); ?>">
+            <label>Age:</label>
+            <input type="number" name="age" value="<?php echo htmlspecialchars($pet['age']); ?>">
 
-        <label>Gender:</label>
-        <select name="gender">
-            <option value="Male" <?php if ($pet['gender'] === 'Male') echo 'selected'; ?>>Male</option>
-            <option value="Female" <?php if ($pet['gender'] === 'Female') echo 'selected'; ?>>Female</option>
-        </select>
+            <label>Gender:</label>
+            <select name="gender">
+                <option value="Male" <?php if ($pet['gender'] === 'Male') echo 'selected'; ?>>Male</option>
+                <option value="Female" <?php if ($pet['gender'] === 'Female') echo 'selected'; ?>>Female</option>
+            </select>
 
-        <label>Description:</label>
-        <textarea name="description" rows="4"><?php echo htmlspecialchars($pet['description']); ?></textarea>
+            <label>Description:</label>
+            <textarea name="description" rows="4"><?php echo htmlspecialchars($pet['description']); ?></textarea>
 
-        <label>Change Image (optional):</label>
-        <input type="file" name="image">
+            <label>Change Image (optional):</label>
+            <input type="file" name="image">
 
-        <button type="submit">Update Pet</button>
-    </form>
+            <button type="submit">Update Pet</button>
+        </form>
 
-    <div class="back-link">
-        <a href="manage_pet_profiles.php">← Back to Manage Pet Profiles</a>
+        <div class="back-link">
+            <a href="manage_pet_profiles.php">← Back to Manage Pet Profiles</a>
+        </div>
     </div>
 </div>
+
+<?php include('../includes/footer.php'); ?>
 
 </body>
 </html>
