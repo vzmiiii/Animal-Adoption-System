@@ -37,7 +37,7 @@ if ($update) {
     <style>
         /* Page styling for a clean, minimalist feel */
         body {
-            background-color: #fff;
+            background-color: #f5f5f5;
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
             padding: 0;
@@ -47,7 +47,7 @@ if ($update) {
             max-width: 700px;
             margin: 100px auto;
             padding: 40px;
-            background-color: #f7e6cf; /* Soft beige background */
+            background-color: #ffffff; /* Soft beige background */
             border-radius: 30px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
         }

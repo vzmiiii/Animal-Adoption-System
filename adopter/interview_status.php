@@ -36,7 +36,7 @@ $result = $stmt->get_result();
     <style>
         body {
             margin: 0;
-            background-color: #fff;
+            background-color: #f5f5f5;
             font-family: 'Segoe UI', sans-serif;
         }
 
@@ -44,7 +44,7 @@ $result = $stmt->get_result();
             max-width: 900px;
             margin: 80px auto;
             padding: 40px;
-            background-color: #f7e6cf;
+            background-color: #ffffff;
             border-radius: 30px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
         }

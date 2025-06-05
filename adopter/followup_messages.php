@@ -32,7 +32,7 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="../css/adopter.css">
     <style>
         body {
-            background-color: #fff;
+            background-color: #f5f5f5;
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
         }
@@ -41,7 +41,7 @@ $result = $stmt->get_result();
             max-width: 900px;
             margin: 80px auto;
             padding: 40px;
-            background-color: #f7e6cf;
+            background-color: #ffffff;
             border-radius: 30px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
         }

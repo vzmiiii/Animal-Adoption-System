@@ -46,7 +46,7 @@ $user = $result->fetch_assoc();
     <link rel="stylesheet" href="../css/adopter.css">
     <style>
         body {
-            background-color: #ffffff;
+            background-color: #f5f5f5;
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
         }
@@ -55,7 +55,7 @@ $user = $result->fetch_assoc();
             width: 60%;
             max-width: 700px;
             margin: 80px auto;
-            background-color: #f7e6cf;
+            background-color: #ffffff;
             padding: 40px;
             border-radius: 30px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
