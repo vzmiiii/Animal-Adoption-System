@@ -58,7 +58,7 @@
         .section-title {
             text-align: center;
             font-size: 22px;
-            background-color: #f7e6cf;
+            background-color: #d5d0b0;
             display: inline-block;
             padding: 10px 25px;
             border-radius: 20px;
