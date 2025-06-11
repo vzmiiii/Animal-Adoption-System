@@ -26,13 +26,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
             box-sizing: border-box;
         }
 
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-
         .dashboard-container {
             display: flex;
             flex-direction: column;
@@ -43,12 +36,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
         }
 
         .dashboard-box {
-            background-color: #ffffff;
+            background-color: #fef9ec;
             width: 100%;
             max-width: 600px;
             padding: 50px 40px;
             border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
@@ -87,20 +80,24 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
         }
 
         ul.dashboard-links a {
-            display: block;
-            padding: 14px 22px;
-            border-radius: 10px;
-            background-color: #f7f7f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 24px;
+            border-radius: 14px;
+            background-color: #ffffff;
             color: #111;
             font-weight: 500;
             text-decoration: none;
-            transition: all 0.2s ease;
-            box-shadow: inset 0 0 0 2px #e0e0e0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
         }
 
         ul.dashboard-links a:hover {
-            background-color: #f0f0f0;
-            box-shadow: inset 0 0 0 2px #c7c7c7;
+            transform: scale(1.02);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            background-color: #f9f9f9;
         }
 
         .alert {
@@ -126,6 +123,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
 
             ul.dashboard-links a {
                 font-size: 14px;
+                padding: 14px 20px;
             }
         }
     </style>
@@ -155,3 +153,4 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
 <?php include('../includes/footer.php'); ?>
 </body>
 </html>
+

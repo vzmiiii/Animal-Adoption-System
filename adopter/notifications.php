@@ -34,22 +34,15 @@ if ($update) {
     <meta charset="UTF-8">
     <title>My Notifications</title>
     <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/adopter.css">
     <style>
-        /* Page styling for a clean, minimalist feel */
-        body {
-            background-color: #f5f5f5;
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
         .notif-box {
-            max-width: 700px;
-            margin: 100px auto;
+            max-width: 900px;
+            margin: 80px auto;
             padding: 40px;
-            background-color: #ffffff; /* Soft beige background */
+            background-color: #fef9ec;
             border-radius: 30px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
         }
 
         h2 {

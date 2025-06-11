@@ -6,7 +6,6 @@
 
     <!-- External CSS for consistent styling across pages -->
     <link rel="stylesheet" href="css/common.css">
-    <link rel="stylesheet" href="css/adopter.css">
 
     <style>
         /* General body styling */
@@ -58,7 +57,7 @@
         .section-title {
             text-align: center;
             font-size: 22px;
-            background-color: #d5d0b0;
+            background-color: #e3d9b5;
             display: inline-block;
             padding: 10px 25px;
             border-radius: 20px;

@@ -64,64 +64,82 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background-color: #ffffff;
         }
 
+    .form-box {
+        background-color: #fef9ec;
+        max-width: 420px;
+        margin: 100px auto;
+        font-family: 'Segoe UI', sans-serif;
+        padding: 40px;
+        border-radius: 25px;
+        text-align: center;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-box h2 {
+        margin-bottom: 25px;
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .form-box input,
+    .form-box select {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+        font-size: 14px;
+        box-sizing: border-box;
+        background: #fdfdfd;
+    }
+
+    .form-box select option:first-child {
+        color: #aaa;
+    }
+
+    .form-box button {
+        width: 100%;
+        background-color: #000;
+        color: #fff;
+        padding: 14px;
+        border: none;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .form-box button:hover {
+        background-color: #333;
+    }
+
+    .form-box .bottom-link {
+        margin-top: 15px;
+        font-size: 14px;
+    }
+
+    .form-box .bottom-link a {
+        color: #000;
+        text-decoration: underline;
+    }
+
+    .error {
+        background-color: #ffe6e6;
+        color: #a33;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    @media (max-width: 500px) {
         .form-box {
-            background-color: #f5f5f5;
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 40px;
-            border-radius: 25px;
-            text-align: center;
+            margin: 50px 20px;
+            padding: 30px 20px;
         }
-
-        .form-box h2 {
-            margin-bottom: 25px;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .form-box input,
-        .form-box select {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: 1px solid #ccc;
-            margin-bottom: 15px;
-            font-size: 14px;
-            box-sizing: border-box;
-            appearance: none;
-            font-family: inherit;
-        }
-
-        .form-box input[type="tel"] {
-            font-size: 14px;
-            height: auto;
-        }
-
-        .form-box button {
-            width: 100%;
-            background-color: #000;
-            color: #fff;
-            padding: 14px;
-            border: none;
-            border-radius: 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-
-        .form-box a {
-            font-size: 14px;
-            text-decoration: none;
-        }
-
-        .form-box a:hover {
-            text-decoration: underline;
-        }
-
-        .error {
-            color: red;
-            margin-bottom: 15px;
-        }
+    }
     </style>
 </head>
 <body>

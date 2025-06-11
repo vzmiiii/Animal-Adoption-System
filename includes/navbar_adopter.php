@@ -24,7 +24,11 @@ $unread_count = $notif_result['unread'];
 <div class="navbar">
     <div class="left-nav">
         <button class="sidebar-toggle" onclick="toggleSidebar(event)">☰</button>
-        <div class="logo">Animal Adoption System</div>
+
+        <div class="logo">
+            <img src="../images/pawprint.png" alt="Logo" class="logo-img">
+            <span class="logo-text">Animal Adoption System</span>
+        </div>
     </div>
     <nav>
         <a href="/animal_adoption_system/adopter/dashboard.php">Home</a>

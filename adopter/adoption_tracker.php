@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Redirect user to login if not authenticated or not an adopter
+// Redirect if not logged in or not an adopter
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
     header("Location: ../login.php");
     exit();
@@ -11,7 +11,6 @@ include('../db_connection.php');
 
 $adopter_id = $_SESSION['user_id'];
 
-// Fetch adopter's applications with corresponding pet info
 $sql = "SELECT aa.*, p.name AS pet_name, p.species
         FROM adoption_applications aa
         JOIN pets p ON aa.pet_id = p.id
@@ -32,14 +31,13 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
     <style>
-        /* Page wrapper - wider and centered */
         .tracker-wrapper {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 30px;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.06);
+            max-width: 900px;
+            margin: 80px auto;
+            padding: 40px;
+            background-color: #fef9ec;
+            border-radius: 30px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
         }
 
         h2 {
@@ -49,17 +47,20 @@ $result = $stmt->get_result();
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
         th, td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
+            padding: 14px 18px;
+            font-size: 14px;
             text-align: left;
+            border-bottom: 1px solid #ddd;
         }
 
         th {
-            background-color: #f9f9f9;
+            background-color: #eee;
             font-weight: bold;
         }
 
@@ -70,7 +71,20 @@ $result = $stmt->get_result();
         }
 
         .status-text {
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-text.approved {
+            color: #2e7d32;
+        }
+
+        .status-text.pending {
+            color: #ff9800;
+        }
+
+        .status-text.rejected {
+            color: #d32f2f;
         }
 
         .cancel-btn {
@@ -79,6 +93,7 @@ $result = $stmt->get_result();
             padding: 6px 12px;
             border: none;
             border-radius: 5px;
+            font-size: 13px;
             cursor: pointer;
         }
 
@@ -110,15 +125,6 @@ $result = $stmt->get_result();
             margin-top: 40px;
             font-style: italic;
         }
-
-        a {
-            text-decoration: none;
-            color: #333;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -127,7 +133,6 @@ $result = $stmt->get_result();
 
 <div class="tracker-wrapper">
     <h2>📋 My Adoption Applications</h2>
-    <a href="dashboard.php">← Back to Dashboard</a>
 
     <?php if ($result->num_rows > 0): ?>
         <table>
@@ -137,15 +142,18 @@ $result = $stmt->get_result();
                 <th>Application Date</th>
                 <th>Status / Action</th>
             </tr>
-            <?php while($row = $result->fetch_assoc()):
+            <?php while ($row = $result->fetch_assoc()):
                 $application_id = $row['id'];
 
-                // Check if an interview has been scheduled
+                // Check interview
                 $checkInterview = $conn->prepare("SELECT id FROM interviews WHERE application_id = ?");
                 $checkInterview->bind_param("i", $application_id);
                 $checkInterview->execute();
                 $interviewResult = $checkInterview->get_result();
                 $hasInterview = $interviewResult->num_rows > 0;
+
+                $status = strtolower($row['status']);
+                $status_class = "status-text " . $status;
             ?>
             <tr>
                 <td><?= htmlspecialchars($row['pet_name']); ?></td>
@@ -153,17 +161,15 @@ $result = $stmt->get_result();
                 <td><?= htmlspecialchars($row['application_date']); ?></td>
                 <td>
                     <div class="status-action">
-                        <span class="status-text"><?= ucfirst(htmlspecialchars($row['status'])); ?></span>
+                        <span class="<?= $status_class ?>"><?= ucfirst($status); ?></span>
 
-                        <?php if ($row['status'] === 'pending'): ?>
-                            <!-- Cancel pending application -->
+                        <?php if ($status === 'pending'): ?>
                             <form method="POST" action="cancel_application.php" class="inline-form" onsubmit="return confirm('Are you sure you want to cancel this application?');">
-                                <input type="hidden" name="application_id" value="<?= $row['id']; ?>">
+                                <input type="hidden" name="application_id" value="<?= $application_id; ?>">
                                 <button type="submit" class="cancel-btn">Cancel</button>
                             </form>
-                        <?php elseif ($row['status'] === 'approved' && !$hasInterview): ?>
-                            <!-- Schedule interview for approved application -->
-                            <a href="schedule_interview.php?app_id=<?= $row['id']; ?>" class="schedule-btn">Schedule Interview</a>
+                        <?php elseif ($status === 'approved' && !$hasInterview): ?>
+                            <a href="schedule_interview.php?app_id=<?= $application_id; ?>" class="schedule-btn">Schedule Interview</a>
                         <?php endif; ?>
                     </div>
                 </td>

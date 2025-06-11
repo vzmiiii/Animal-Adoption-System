@@ -1,5 +1,8 @@
 <div class="navbar">
-    <div class="logo">Animal Adoption System</div>
+    <div class="logo">
+            <img src="images/pawprint.png" alt="Logo" class="logo-img">
+            <span class="logo-text">Animal Adoption System</span>
+        </div>
     <nav>
         <a href="/animal_adoption_system/homepage.php">Home</a>
         <a href="#">Contact</a>

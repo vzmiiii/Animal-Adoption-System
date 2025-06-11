@@ -31,17 +31,11 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
         .followup-wrapper {
             max-width: 900px;
             margin: 80px auto;
             padding: 40px;
-            background-color: #ffffff;
+            background-color: #fef9ec;
             border-radius: 30px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
         }
@@ -93,7 +87,6 @@ $result = $stmt->get_result();
 
 <div class="followup-wrapper">
     <h2>📩 Follow-Up Messages from Shelters</h2>
-    <a href="dashboard.php">← Back to Dashboard</a>
 
     <?php if ($result->num_rows > 0): ?>
         <?php while($row = $result->fetch_assoc()): ?>

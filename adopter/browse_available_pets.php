@@ -49,23 +49,26 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="../css/adopter.css">
     <style>
         body {
-            background-color: #fff;
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
         }
 
         .page-wrapper {
-            max-width: 1000px;
-            margin: 80px auto 40px;
-            background-color: #fff;
-            padding: 20px 20px 40px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); /* Softer shadow */
             border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            background-color: #fef9ec;
+            max-width: 1100px;
+            margin: 80px auto 40px;
+            padding: 30px 20px;
         }
 
         h2 {
             text-align: center;
-            font-size: 26px;
+            font-size: 28px;
             margin-bottom: 25px;
         }
 
@@ -84,6 +87,7 @@ $result = $conn->query($sql);
             color: #333;
             text-decoration: none;
             font-weight: 500;
+            transition: background-color 0.2s ease;
         }
 
         .top-links a:hover {
@@ -91,33 +95,32 @@ $result = $conn->query($sql);
         }
 
         form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 30px;
         }
 
         form input,
         form select {
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-radius: 8px;
             border: 1px solid #ccc;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         form button,
         .clear-btn {
             background-color: #000;
             color: #fff;
-            padding: 8px 16px;
+            padding: 10px 18px;
             border: none;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             text-decoration: none;
+            transition: 0.3s ease;
         }
 
         .clear-btn {
@@ -125,37 +128,50 @@ $result = $conn->query($sql);
             color: #000;
         }
 
+        form button:hover,
+        .clear-btn:hover {
+            opacity: 0.9;
+        }
+
         .pet-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
         }
 
         .pet-card {
-            background-color: #f9f9f9;
-            border-radius: 20px;
-            padding: 16px;
+            background-color: #fff;
+            border-radius: 16px;
+            background-color:#ffffff;
+            padding: 20px;
             text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pet-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
         }
 
         .pet-card img {
             width: 100%;
-            height: 160px;
+            height: 180px;
             object-fit: cover;
             border-radius: 12px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .pet-card h3 {
-            margin: 0;
-            font-size: 17px;
+            margin: 10px 0 5px;
+            font-size: 20px;
+            color: #222;
         }
 
         .pet-card p {
             margin: 4px 0;
-            font-size: 13px;
+            font-size: 14px;
+            color: #555;
         }
 
         .pet-card a {
@@ -163,9 +179,9 @@ $result = $conn->query($sql);
             display: inline-block;
             background-color: #000;
             color: #fff;
-            padding: 8px 14px;
+            padding: 10px 16px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 14px;
             text-decoration: none;
             font-weight: bold;
         }
@@ -176,26 +192,33 @@ $result = $conn->query($sql);
         }
 
         .pagination a {
-            margin: 0 5px;
-            padding: 8px 12px;
-            border-radius: 12px;
+            margin: 0 6px;
+            padding: 8px 14px;
+            border-radius: 14px;
             background-color: #eee;
             color: #333;
             text-decoration: none;
             font-weight: bold;
+            transition: background 0.2s ease;
         }
 
-        .pagination a.active {
+        .pagination a.active,
+        .pagination a:hover {
             background-color: #000;
             color: #fff;
         }
 
-        @media (max-width: 600px) {
-            .top-links {
-                flex-direction: column;
-                align-items: center;
-            }
+        @media (max-width: 900px) {
+        .pet-grid {
+        grid-template-columns: repeat(2, 1fr);
         }
+    }
+
+        @media (max-width: 600px) {
+        .pet-grid {
+        grid-template-columns: 1fr;
+        }
+    }
     </style>
 </head>
 <body>
@@ -253,7 +276,7 @@ $result = $conn->query($sql);
     <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>">&laquo; Previous</a>
+                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>">&laquo; Prev</a>
             <?php endif; ?>
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
                 <a href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>" class="<?= $i == $page ? 'active' : '' ?>">
@@ -270,3 +293,4 @@ $result = $conn->query($sql);
 <?php include('../includes/footer.php'); ?>
 </body>
 </html>
+

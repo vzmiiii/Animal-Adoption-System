@@ -9,10 +9,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
 
 include('../db_connection.php');
 
-// Get current adopter's ID from session
 $adopter_id = $_SESSION['user_id'];
 
-// SQL to retrieve interview details for the adopter
 $sql = "SELECT i.*, p.name AS pet_name, u.username AS shelter_name
         FROM interviews i
         JOIN pets p ON i.pet_id = p.id
@@ -33,18 +31,13 @@ $result = $stmt->get_result();
     <title>My Interview Status</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/adopter.css">
     <style>
-        body {
-            margin: 0;
-            background-color: #f5f5f5;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
         .box {
             max-width: 900px;
             margin: 80px auto;
             padding: 40px;
-            background-color: #ffffff;
+            background-color: #fef9ec;
             border-radius: 30px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
         }
@@ -72,10 +65,24 @@ $result = $stmt->get_result();
 
         th {
             background-color: #eee;
+            font-weight: bold;
         }
 
         tr:last-child td {
             border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-label.confirmed {
+            color: #2e7d32; /* green */
+        }
+
+        .status-label.pending {
+            color: #ff9800; /* orange */
         }
 
         p {
@@ -86,7 +93,6 @@ $result = $stmt->get_result();
 </head>
 <body>
 
-<!-- Include adopter navbar -->
 <?php include('../includes/navbar_adopter.php'); ?>
 
 <div class="box">
@@ -100,12 +106,15 @@ $result = $stmt->get_result();
                 <th>Date & Time</th>
                 <th>Status</th>
             </tr>
-            <?php while ($row = $result->fetch_assoc()): ?>
+            <?php while ($row = $result->fetch_assoc()):
+                $status = strtolower($row['status']);
+                $status_class = "status-label " . $status;
+            ?>
                 <tr>
                     <td><?= htmlspecialchars($row['pet_name']) ?></td>
                     <td><?= htmlspecialchars($row['shelter_name']) ?></td>
                     <td><?= date("d M Y, h:i A", strtotime($row['interview_datetime'])) ?></td>
-                    <td><?= ucfirst(htmlspecialchars($row['status'])) ?></td>
+                    <td><span class="<?= $status_class ?>"><?= ucfirst($status) ?></span></td>
                 </tr>
             <?php endwhile; ?>
         </table>
@@ -114,7 +123,6 @@ $result = $stmt->get_result();
     <?php endif; ?>
 </div>
 
-<!-- Include footer -->
 <?php include('../includes/footer.php'); ?>
 </body>
 </html>
