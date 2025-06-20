@@ -7,6 +7,30 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
 include('../db_connection.php');
 
 $shelter_id = $_SESSION['user_id'];
+$msg = "";
+$msg_class = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $pet_id     = $_POST['pet_id'];
+    $adopter_id = $_POST['adopter_id'];
+    $message    = trim($_POST['message']);
+
+    if (empty($pet_id) || empty($adopter_id) || empty($message)) {
+        $msg = "All fields are required.";
+        $msg_class = "error";
+    } else {
+        $insert = $conn->prepare("INSERT INTO follow_ups (pet_id, adopter_id, message) VALUES (?, ?, ?)");
+        $insert->bind_param("iis", $pet_id, $adopter_id, $message);
+        
+        if ($insert->execute()) {
+            $msg = "Follow-up message sent successfully!";
+            $msg_class = "success";
+        } else {
+            $msg = "Failed to send message. Please try again.";
+            $msg_class = "error";
+        }
+    }
+}
 
 $sql = "SELECT p.id AS pet_id, p.name AS pet_name, a.adopter_id, u.username AS adopter_name
         FROM pets p
@@ -18,19 +42,6 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $shelter_id);
 $stmt->execute();
 $result = $stmt->get_result();
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $pet_id     = $_POST['pet_id'];
-    $adopter_id = $_POST['adopter_id'];
-    $message    = trim($_POST['message']);
-
-    $insert = $conn->prepare("INSERT INTO follow_ups (pet_id, adopter_id, message) VALUES (?, ?, ?)");
-    $insert->bind_param("iis", $pet_id, $adopter_id, $message);
-    $insert->execute();
-
-    echo "<div class='confirmation'>Follow-up message sent.<br><a href='dashboard.php' class='back-link'>← Back to Dashboard</a></div>";
-    exit();
-}
 ?>
 
 <!DOCTYPE html>
@@ -39,120 +50,119 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <title>Send Follow-Up Reminders</title>
     <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/shelter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
-        /* Reset and base styles */
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
         body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
-        /* Centered wrapper */
-        .page-wrapper {
-            max-width: 700px;
-            margin: auto;
-            background-color: #fff;
-            padding: 40px;
+        .content-container {
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        .form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.92);
             border-radius: 16px;
-            border: 1px solid #e0e0e0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
-
-        /* Heading */
-        h2 {
-            margin-top: 0;
-            font-size: 1.75em;
-            font-weight: 600;
-            color: #222;
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
         }
-
-        /* Back link styling */
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
+        .form-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 0;
+        }
+        .form-header p {
+            font-size: 16px;
             color: #555;
-            text-decoration: none;
-            font-size: 0.95em;
+            margin-top: 0.5rem;
         }
-        .back-link:hover {
-            text-decoration: underline;
+        .form-group {
+            margin-bottom: 1.5rem;
         }
-
-        /* Horizontal rule */
-        hr {
-            border: none;
-            height: 1px;
-            background-color: #e0e0e0;
-            margin: 20px 0;
-        }
-
-        /* Form labels */
-        label {
+        .form-group label {
             display: block;
-            margin-top: 20px;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 1em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
             color: #444;
         }
-
-        /* Select & textarea */
-        select, textarea {
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            font-size: 1em;
-            padding: 10px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            background-color: #fafafa;
-            resize: vertical;
-            transition: border-color 0.2s;
-        }
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #888;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            font-size: 15px;
+            box-sizing: border-box;
             background-color: #fff;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
-
-        /* Submit button */
-        button {
-            margin-top: 20px;
-            background-color: #111;
-            color: #fff;
-            padding: 12px 24px;
-            font-size: 1em;
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4e8cff;
+            box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.3);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .button {
+            display: inline-block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 1rem;
+            border-radius: 10px;
+            text-decoration: none;
             font-weight: 600;
+            font-size: 16px;
+            color: #fff;
+            background-image: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
             border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #333;
-        }
-
-        /* Empty state */
-        .no-data {
-            margin-top: 30px;
-            font-style: italic;
-            color: #777;
-        }
-
-        /* Confirmation message */
-        .confirmation {
-            max-width: 600px;
-            margin: 80px auto;
-            padding: 30px;
-            background-color: #eafaf1;
-            border: 1px solid #cdeac7;
-            border-radius: 8px;
+            transition: all 0.3s ease;
             text-align: center;
-            font-size: 1em;
-            color: #2a5d34;
+            cursor: pointer;
+        }
+        .button:hover {
+            box-shadow: 0 4px 15px rgba(78, 140, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .message {
+            text-align: center;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .no-data {
+            text-align: center;
+            font-size: 18px;
+            color: #555;
+            margin-top: 4rem;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
         }
     </style>
 </head>
@@ -160,57 +170,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <?php include('../includes/navbar_shelter.php'); ?>
 
-    <div class="page-wrapper">
-        <h2>Send Follow-Up to Adopters</h2>
-        <a href="dashboard.php" class="back-link">← Back to Dashboard</a>
-        <hr>
+    <div class="content-container">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Send Follow-Up to Adopters</h2>
+                <p>Select an adopted pet to send a message to their new owner.</p>
+            </div>
 
-        <?php if ($result->num_rows > 0): ?>
-            <form method="post" novalidate>
-                <!-- Pet & Adopter selection -->
-                <label for="pet_id">Select Pet & Adopter</label>
-                <select id="pet_id" name="pet_id" required>
-                    <?php while($row = $result->fetch_assoc()): ?>
-                        <option 
-                            value="<?php echo $row['pet_id']; ?>" 
-                            data-adopter="<?php echo $row['adopter_id']; ?>">
-                            <?php 
-                                echo htmlspecialchars($row['pet_name']) 
-                                     . " → " 
-                                     . htmlspecialchars($row['adopter_name']); 
-                            ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
+            <?php if (!empty($msg)): ?>
+                <div class="message <?php echo $msg_class; ?>"><?= htmlspecialchars($msg); ?></div>
+            <?php endif; ?>
 
-                <!-- Hidden field for the adopter_id; populated via JS -->
-                <input type="hidden" name="adopter_id" id="adopter_id" value="">
+            <?php if ($result->num_rows > 0): ?>
+                <form method="post" novalidate>
+                    <div class="form-group">
+                        <label for="pet_id">Select Pet & Adopter</label>
+                        <select id="pet_id" name="pet_id" required>
+                            <option value="" disabled selected>-- Choose a Pet --</option>
+                            <?php while($row = $result->fetch_assoc()): ?>
+                                <option 
+                                    value="<?php echo $row['pet_id']; ?>" 
+                                    data-adopter="<?php echo $row['adopter_id']; ?>">
+                                    <?php 
+                                        echo htmlspecialchars($row['pet_name']) 
+                                             . " → " 
+                                             . htmlspecialchars($row['adopter_name']); 
+                                    ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
 
-                <!-- Message textarea -->
-                <label for="message">Message</label>
-                <textarea id="message" name="message" rows="4" placeholder="Type your follow-up message here…" required></textarea>
+                    <input type="hidden" name="adopter_id" id="adopter_id" value="">
 
-                <!-- Submit button -->
-                <button type="submit">Send Reminder</button>
-            </form>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="5" placeholder="Type your follow-up message here…" required></textarea>
+                    </div>
 
-            <script>
-                // Update the hidden adopter_id whenever the selected pet changes
-                const petSelect   = document.getElementById('pet_id');
-                const adopterField = document.getElementById('adopter_id');
+                    <button type="submit" class="button">Send Reminder</button>
+                </form>
 
-                function updateAdopterField() {
-                    const selectedOption = petSelect.options[petSelect.selectedIndex];
-                    adopterField.value = selectedOption.getAttribute('data-adopter');
-                }
+                <script>
+                    const petSelect = document.getElementById('pet_id');
+                    const adopterField = document.getElementById('adopter_id');
 
-                petSelect.addEventListener('change', updateAdopterField);
-                // Initialize on page load
-                document.addEventListener('DOMContentLoaded', updateAdopterField);
-            </script>
-        <?php else: ?>
-            <p class="no-data">No adopted pets with approved applications found.</p>
-        <?php endif; ?>
+                    function updateAdopterField() {
+                        const selectedOption = petSelect.options[petSelect.selectedIndex];
+                        if (selectedOption) {
+                             adopterField.value = selectedOption.getAttribute('data-adopter') || '';
+                        }
+                    }
+
+                    petSelect.addEventListener('change', updateAdopterField);
+                    document.addEventListener('DOMContentLoaded', updateAdopterField);
+                </script>
+            <?php else: ?>
+                <p class="no-data">No adopted pets with approved applications found.</p>
+            <?php endif; ?>
+        </div>
     </div>
 <?php include('../includes/footer.php'); ?>
 </body>

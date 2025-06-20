@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
 }
 include('../db_connection.php');
 $msg = "";
+$msg_class = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = trim($_POST['name']);
@@ -27,10 +28,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
                 $image = $filename;
             } else {
-                $msg = "❌ Failed to upload image.";
+                $msg = "Failed to upload image.";
+                $msg_class = "error";
             }
         } else {
-            $msg = "❌ Only JPG, JPEG, or PNG files are allowed.";
+            $msg = "Only JPG, JPEG, or PNG files are allowed.";
+            $msg_class = "error";
         }
     }
 
@@ -40,9 +43,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sssisssi", $name, $species, $breed, $age, $gender, $description, $image, $shelter_id);
         if ($stmt->execute()) {
-            $msg = "✅ Pet added successfully!";
+            $msg = "Pet added successfully!";
+            $msg_class = "success";
         } else {
-            $msg = "❌ Error: " . htmlspecialchars($conn->error);
+            $msg = "Error: " . htmlspecialchars($conn->error);
+            $msg_class = "error";
         }
     }
 }
@@ -53,82 +58,94 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <title>Add New Pet</title>
     <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/shelter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
         body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
-        .form-wrapper {
-            max-width: 700px;
-            margin: 80px auto;
-            padding: 50px;
-            background-color: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        .content-container {
+            padding-top: 20px;
+            padding-bottom: 40px;
         }
-
-        .form-wrapper h2 {
+        .form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+        .form-header h2 {
             text-align: center;
-            font-size: 26px;
-            font-weight: 600;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
             margin-bottom: 30px;
         }
-
-        .form-wrapper label {
-            font-weight: 500;
-            margin-bottom: 8px;
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label {
             display: block;
-            font-size: 14px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #444;
         }
-
-        .form-wrapper input[type="text"],
-        .form-wrapper input[type="number"],
-        .form-wrapper select,
-        .form-wrapper textarea,
-        .form-wrapper input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            font-size: 14px;
-            background-color: #fff;
-        }
-
-        .form-wrapper textarea {
-            resize: vertical;
-        }
-
-        .form-wrapper button {
+        .form-group input, .form-group select, .form-group textarea {
             width: 100%;
             padding: 14px;
-            background-color: #000;
-            color: #fff;
-            font-weight: bold;
-            text-transform: uppercase;
-            border: none;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .form-wrapper button:hover {
-            background-color: #222;
-        }
-
-        .form-wrapper .msg {
-            text-align: center;
-            padding: 12px;
-            margin-bottom: 20px;
             border-radius: 10px;
-            font-weight: 500;
-            background-color: #e6f5e6;
-            color: #2c6b2c;
+            border: 1px solid #e0e0e0;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #fff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4e8cff;
+            box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.3);
+        }
+        .button {
+            display: inline-block;
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            color: #fff;
+            background-image: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            border: none;
+            transition: all 0.3s ease;
+            text-align: center;
+            cursor: pointer;
+        }
+        .button:hover {
+            box-shadow: 0 4px 15px rgba(78, 140, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .message {
+            text-align: center;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
@@ -136,39 +153,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <?php include('../includes/navbar_shelter.php'); ?>
 
-<div class="form-wrapper">
-    <h2>➕ Add a New Pet for Adoption</h2>
+<div class="content-container">
+    <div class="form-container">
+        <div class="form-header">
+            <h2>➕ Add a New Pet for Adoption</h2>
+        </div>
 
-    <?php if (!empty($msg)) echo "<div class='msg'>$msg</div>"; ?>
+        <?php if (!empty($msg)): ?>
+            <div class="message <?php echo $msg_class; ?>"><?php echo $msg; ?></div>
+        <?php endif; ?>
 
-    <form method="post" enctype="multipart/form-data">
-        <label for="name">Pet Name:</label>
-        <input type="text" name="name" id="name" required>
-
-        <label for="species">Species:</label>
-        <input type="text" name="species" id="species" required>
-
-        <label for="breed">Breed:</label>
-        <input type="text" name="breed" id="breed" required>
-
-        <label for="age">Age (in years):</label>
-        <input type="number" name="age" id="age" required>
-
-        <label for="gender">Gender:</label>
-        <select name="gender" id="gender" required>
-            <option value="">-- Select Gender --</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-        </select>
-
-        <label for="description">Description:</label>
-        <textarea name="description" id="description" rows="4" required></textarea>
-
-        <label for="image">Upload Image:</label>
-        <input type="file" name="image" id="image">
-
-        <button type="submit">Add Pet</button>
-    </form>
+        <form method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Pet Name:</label>
+                <input type="text" name="name" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="species">Species:</label>
+                <input type="text" name="species" id="species" required>
+            </div>
+            <div class="form-group">
+                <label for="breed">Breed:</label>
+                <input type="text" name="breed" id="breed" required>
+            </div>
+            <div class="form-group">
+                <label for="age">Age (in years):</label>
+                <input type="number" name="age" id="age" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">Gender:</label>
+                <select name="gender" id="gender" required>
+                    <option value="" disabled selected>-- Select Gender --</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea name="description" id="description" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="image">Upload Image:</label>
+                <input type="file" name="image" id="image">
+            </div>
+            <button type="submit" class="button">Add Pet</button>
+        </form>
+    </div>
 </div>
 
 <?php include('../includes/footer.php'); ?>

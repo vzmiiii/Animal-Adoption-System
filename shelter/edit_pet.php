@@ -55,9 +55,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $update_sql = "UPDATE pets SET name=?, species=?, breed=?, age=?, gender=?, description=?, image=? WHERE id=? AND shelter_id=?";
     $update_stmt = $conn->prepare($update_sql);
     $update_stmt->bind_param("sssisssii", $name, $species, $breed, $age, $gender, $description, $update_image, $pet_id, $shelter_id);
-    $update_stmt->execute();
-
-    echo "Pet updated successfully. <a href='manage_pet_profiles.php'>Back to List</a>";
+    
+    if ($update_stmt->execute()) {
+        header("Location: manage_pet_profiles.php?status=updated");
+    } else {
+        echo "Error updating record: " . $conn->error;
+    }
     exit();
 }
 ?>
@@ -68,115 +71,107 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <title>Edit Pet</title>
     <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/shelter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-
         body {
-            display: flex;
-            flex-direction: column;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
-        .content {
-            flex: 1;
-            padding: 40px 20px;
+        .content-container {
+            padding-top: 20px;
+            padding-bottom: 40px;
         }
-
-        .page-wrapper {
-            max-width: 700px;
-            margin: auto;
-            background-color: #fff;
-            padding: 40px;
+        .form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.92);
             border-radius: 16px;
-            border: 1px solid #e0e0e0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
-
-        h2 {
+        .form-header h2 {
             text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
             margin-bottom: 30px;
-            font-size: 26px;
-            font-weight: 600;
         }
-
-        form label {
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
             display: block;
-            margin-top: 16px;
+            margin-bottom: 0.5rem;
             font-weight: 600;
+            color: #444;
         }
-
-        form input[type="text"],
-        form input[type="number"],
-        form textarea,
-        form select,
-        form input[type="file"] {
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #fff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
+            border-color: #4e8cff;
+            box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.3);
         }
-
-        form input:focus,
-        form select:focus,
-        form textarea:focus {
-            border-color: #888;
-            outline: none;
-        }
-
-        form input:focus-visible,
-        form textarea:focus-visible,
-        form select:focus-visible {
-            outline: none;
-        }
-
-        form textarea {
-            resize: vertical;
-        }
-
-        button[type="submit"] {
+        .button {
+            display: inline-block;
             width: 100%;
-            background-color: #000;
-            color: #fff;
-            padding: 12px;
-            margin-top: 30px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #333;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .back-link a {
+            padding: 15px;
+            border-radius: 10px;
             text-decoration: none;
-            color: #000;
             font-weight: 600;
+            font-size: 16px;
+            color: #fff;
+            background-image: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            border: none;
+            transition: all 0.3s ease;
+            text-align: center;
+            cursor: pointer;
         }
-
-        .back-link a:hover {
-            text-decoration: underline;
+        .button:hover {
+            box-shadow: 0 4px 15px rgba(78, 140, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .button-secondary {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            color: #444;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .button-secondary:hover {
+            background-image: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 10px rgba(78, 140, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .back-link-container {
+            text-align: center;
+            margin-top: 1.5rem;
         }
     </style>
 </head>
@@ -184,39 +179,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <?php include('../includes/navbar_shelter.php'); ?>
 
-<div class="content">
-    <div class="page-wrapper">
-        <h2>Edit Pet - <?php echo htmlspecialchars($pet['name']); ?></h2>
+<div class="content-container">
+    <div class="form-container">
+        <div class="form-header">
+            <h2>Edit Pet - <?php echo htmlspecialchars($pet['name']); ?></h2>
+        </div>
         <form method="post" enctype="multipart/form-data">
-            <label>Name:</label>
-            <input type="text" name="name" value="<?php echo htmlspecialchars($pet['name']); ?>" required>
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($pet['name']); ?>" required>
+            </div>
 
-            <label>Species:</label>
-            <input type="text" name="species" value="<?php echo htmlspecialchars($pet['species']); ?>">
+            <div class="form-group">
+                <label for="species">Species:</label>
+                <input type="text" id="species" name="species" value="<?php echo htmlspecialchars($pet['species']); ?>">
+            </div>
 
-            <label>Breed:</label>
-            <input type="text" name="breed" value="<?php echo htmlspecialchars($pet['breed']); ?>">
+            <div class="form-group">
+                <label for="breed">Breed:</label>
+                <input type="text" id="breed" name="breed" value="<?php echo htmlspecialchars($pet['breed']); ?>">
+            </div>
 
-            <label>Age:</label>
-            <input type="number" name="age" value="<?php echo htmlspecialchars($pet['age']); ?>">
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input type="number" id="age" name="age" value="<?php echo htmlspecialchars($pet['age']); ?>">
+            </div>
 
-            <label>Gender:</label>
-            <select name="gender">
-                <option value="Male" <?php if ($pet['gender'] === 'Male') echo 'selected'; ?>>Male</option>
-                <option value="Female" <?php if ($pet['gender'] === 'Female') echo 'selected'; ?>>Female</option>
-            </select>
+            <div class="form-group">
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender">
+                    <option value="Male" <?php if ($pet['gender'] === 'Male') echo 'selected'; ?>>Male</option>
+                    <option value="Female" <?php if ($pet['gender'] === 'Female') echo 'selected'; ?>>Female</option>
+                </select>
+            </div>
 
-            <label>Description:</label>
-            <textarea name="description" rows="4"><?php echo htmlspecialchars($pet['description']); ?></textarea>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="4"><?php echo htmlspecialchars($pet['description']); ?></textarea>
+            </div>
 
-            <label>Change Image (optional):</label>
-            <input type="file" name="image">
+            <div class="form-group">
+                <label for="image">Change Image (optional):</label>
+                <input type="file" id="image" name="image">
+            </div>
 
-            <button type="submit">Update Pet</button>
+            <button type="submit" class="button">Update Pet</button>
         </form>
 
-        <div class="back-link">
-            <a href="manage_pet_profiles.php">← Back to Manage Pet Profiles</a>
+        <div class="back-link-container">
+            <a href="manage_pet_profiles.php" class="button-secondary">← Back to Manage Pet Profiles</a>
         </div>
     </div>
 </div>

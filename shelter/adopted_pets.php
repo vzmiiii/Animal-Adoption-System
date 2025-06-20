@@ -20,130 +20,126 @@ $result = $stmt->get_result();
     <meta charset="UTF-8">
     <title>Adopted Pets</title>
     <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/shelter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
-        /* Reset box-sizing for predictable spacing */
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
-
         body {
-            margin: 0;
-            background-color: #f5f5f5;
-            font-family: 'Segoe UI', sans-serif;
-            color: #333;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
-        /* Center-wrapper to limit content width */
-        .page-wrapper {
-            max-width: 1100px;
-            margin: 50px auto;
-            padding: 0 20px;
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
+        .content-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
-
-        h2 {
+        .page-header {
             text-align: center;
-            font-size: 26px;
-            font-weight: 600;
-            margin-bottom: 40px;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 30px;
         }
-
-        /* Fixed 3-column grid. On narrower screens, collapse gracefully. */
         .pet-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            gap: 2rem;
         }
-
-        @media (max-width: 900px) {
+        @media (max-width: 992px) {
             .pet-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .pet-grid {
                 grid-template-columns: 1fr;
             }
         }
-
-        /* Individual card styling */
         .pet-card {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
+            background-color: #fff;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
-            transition: box-shadow 0.15s ease, transform 0.15s ease;
         }
         .pet-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         }
-
-        /* Image at top of card, cropped and centered */
-        .pet-image {
+        .pet-card-img {
             width: 100%;
-            height: 180px;
+            height: 220px;
             object-fit: cover;
         }
-
-        /* Text container inside card */
-        .pet-details {
-            padding: 16px;
-            flex: 1;
+        .pet-card-body {
+            padding: 1.5rem;
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            text-align: left;
+        }
+        .pet-card-body h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 22px;
+            color: #333;
+        }
+        .pet-card-body p {
+            margin: 0.25rem 0;
+            color: #666;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .pet-card-body .adoption-date {
+            font-weight: 600;
+            color: #4CAF50;
+            margin-top: 0.5rem;
+        }
+        .pet-card-footer {
+            margin-top: auto;
+            padding-top: 1rem;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            color: #fff;
+            background-image: linear-gradient(90deg, #4e8cff 0%, #6ed6a5 100%);
+            border: none;
+            transition: all 0.3s ease;
             text-align: center;
         }
-
-        .pet-details strong {
-            font-size: 18px;
-            margin-bottom: 8px;
+        .button:hover {
+            box-shadow: 0 4px 15px rgba(78, 140, 255, 0.4);
+            transform: translateY(-2px) scale(1.02);
         }
-        .pet-details p {
-            margin: 4px 0;
-            font-size: 14px;
-            line-height: 1.4;
-            color: #555;
-        }
-
-        /* Button at bottom of card */
-        .black-btn {
-            margin-top: auto;
-            padding: 8px 16px;
-            background-color: #333;
-            color: #fff;
-            font-size: 14px;
-            border: none;
-            border-radius: 6px;
-            text-decoration: none;
-            cursor: pointer;
-            transition: background-color 0.15s ease;
-        }
-        .black-btn:hover {
-            background-color: #111;
-        }
-
-        /* If no records exist */
         .no-pets-msg {
             text-align: center;
-            font-size: 16px;
-            color: #777;
-            margin-top: 60px;
+            font-size: 18px;
+            color: #555;
+            margin-top: 4rem;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
         }
     </style>
 </head>
 <body>
     <?php include('../includes/navbar_shelter.php'); ?>
 
-    <div class="page-wrapper">
-        <h2>List of Adopted Pets</h2>
+    <div class="content-container">
+        <h2 class="page-header">List of Adopted Pets</h2>
 
         <?php if ($result->num_rows > 0): ?>
             <div class="pet-grid">
@@ -152,16 +148,18 @@ $result = $stmt->get_result();
                         <img
                             src="../images/pets/<?php echo htmlspecialchars($pet['image']); ?>"
                             alt="Image of <?php echo htmlspecialchars($pet['name']); ?>"
-                            class="pet-image"
+                            class="pet-card-img"
                         >
-                        <div class="pet-details">
-                            <strong><?php echo htmlspecialchars($pet['name']); ?></strong>
-                            <p>Species: <?php echo htmlspecialchars($pet['species']); ?></p>
-                            <p>Breed: <?php echo htmlspecialchars($pet['breed']); ?></p>
-                            <p>Adopted on: <?php echo htmlspecialchars($pet['adoption_date']); ?></p>
-                            <a href="follow_up_history.php?pet_id=<?php echo $pet['id']; ?>" class="black-btn">
-                                View Follow-Up
-                            </a>
+                        <div class="pet-card-body">
+                            <h3><?php echo htmlspecialchars($pet['name']); ?></h3>
+                            <p><strong>Species:</strong> <?php echo htmlspecialchars($pet['species']); ?></p>
+                            <p><strong>Breed:</strong> <?php echo htmlspecialchars($pet['breed']); ?></p>
+                            <p class="adoption-date">Adopted on: <?php echo date("F j, Y", strtotime($pet['adoption_date'])); ?></p>
+                            <div class="pet-card-footer">
+                                <a href="follow_up_history.php?pet_id=<?php echo $pet['id']; ?>" class="button">
+                                    View Follow-Up History
+                                </a>
+                            </div>
                         </div>
                     </div>
                 <?php endwhile; ?>

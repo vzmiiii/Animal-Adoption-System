@@ -16,146 +16,186 @@ include('../db_connection.php');
 
 $shelter_id = $_SESSION['user_id'];
 
-// Fetch all follow-up messages for pets belonging to this shelter,
-// along with the pet name and adopter's username, ordered by most recent
+// Check if a specific pet_id is provided to filter the history
+$pet_id_filter = isset($_GET['pet_id']) ? (int)$_GET['pet_id'] : 0;
+
+// Base SQL for fetching messages
 $sql = "
     SELECT 
-        f.*, 
+        f.message,
+        f.sent_at, 
         p.name AS pet_name, 
         u.username AS adopter_name
     FROM follow_ups f
     JOIN pets p ON f.pet_id = p.id
     JOIN users u ON f.adopter_id = u.id
     WHERE p.shelter_id = ?
-    ORDER BY f.sent_at DESC
 ";
 
+if ($pet_id_filter > 0) {
+    $sql .= " AND f.pet_id = ?";
+}
+$sql .= " ORDER BY f.sent_at DESC";
+
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $shelter_id);
+if ($pet_id_filter > 0) {
+    $stmt->bind_param("ii", $shelter_id, $pet_id_filter);
+} else {
+    $stmt->bind_param("i", $shelter_id);
+}
 $stmt->execute();
 $result = $stmt->get_result();
+$messages = $result->fetch_all(MYSQLI_ASSOC);
+
+// Determine the page title
+$page_title = "Follow-Up Message History";
+$page_subtitle = "A log of all messages sent to adopters from your shelter.";
+if ($pet_id_filter > 0) {
+    // Fetch the pet's name for the title, regardless of whether there are messages
+    $pet_name_sql = "SELECT name FROM pets WHERE id = ? AND shelter_id = ?";
+    $pet_name_stmt = $conn->prepare($pet_name_sql);
+    $pet_name_stmt->bind_param("ii", $pet_id_filter, $shelter_id);
+    $pet_name_stmt->execute();
+    $pet_name_result = $pet_name_stmt->get_result();
+    if ($pet_row = $pet_name_result->fetch_assoc()) {
+        $page_title = "Follow-Up History for " . htmlspecialchars($pet_row['name']);
+        $page_subtitle = "A log of all messages sent for this specific pet.";
+    }
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Follow-Up Message History</title>
-
-    <!-- Common styles (e.g., navbar, footer, resets) -->
+    <title><?php echo $page_title; ?></title>
     <link rel="stylesheet" href="../css/common.css">
-    <!-- Shelter-specific styles (you may already have layout and color rules here) -->
-    <link rel="stylesheet" href="../css/shelter.css">
-
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
-        /* Page background and font settings */
         body {
+            background: linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .content-container {
+            max-width: 850px;
+            margin: 2.5rem auto;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .page-header h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 0.5rem 0;
+        }
+        .page-header p {
+            font-size: 17px;
+            color: #7f8c8d;
             margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
-
-        /* Main wrapper to center content and limit width */
-        .page-wrapper {
-            max-width: 700px;
-            margin: auto;
-            background-color: #fff;
-            padding: 40px;
-            border-radius: 16px;
-            border: 1px solid #e0e0e0;
-        }
-
-        /* Page title */
-        h2 {
-            text-align: center;
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #222;
-        }
-
-        /* Individual follow-up card */
         .followup-card {
-            background-color: #ffffff; /* Light beige */
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+            background-color: #ffffff;
+            padding: 2rem;
+            margin-bottom: 1.75rem;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            border: 1px solid #f0f0f0;
+            transition: all 0.25s ease-in-out;
         }
-
-        .followup-card p {
-            margin: 8px 0;
-            line-height: 1.5;
-            color: #333;
+        .followup-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.09);
         }
-
-        .followup-card strong {
-            color: #000; /* Pure black for labels */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-
-        .followup-card em {
-            color: #666; /* Lighter grey for timestamps */
-            font-size: 0.9rem;
+        .card-header .info p {
+            margin: 0 0 0.3rem 0;
+            font-size: 16px;
+            color: #34495e;
         }
-
-        /* Message text formatting */
+        .card-header .info strong {
+            font-weight: 600;
+            color: #5b6a78;
+        }
+        .card-header .timestamp {
+            font-size: 14px;
+            color: #95a5a6;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
         .message-text {
-            white-space: pre-wrap; /* Preserve line breaks */
-            margin-top: 8px;
+            white-space: pre-wrap;
+            line-height: 1.7;
+            color: #34495e;
+            font-size: 15.5px;
+            padding-top: 1.25rem;
+            margin-top: 1rem;
+            border-top: 1px solid #ecf0f1;
+            text-align: left;
         }
-
-        /* Fallback text when there are no messages */
-        p.no-messages {
+        .no-messages {
             text-align: center;
-            font-style: italic;
-            color: #555;
-            margin-top: 40px;
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-top: 2rem;
+            padding: 3rem;
+            background-color: rgba(245, 245, 245, 0.7);
+            border-radius: 15px;
         }
     </style>
 </head>
 <body>
-    <!-- Include shelter navbar (assumes ../includes/navbar_shelter.php exists) -->
     <?php include('../includes/navbar_shelter.php'); ?>
 
-    <div class="page-wrapper">
-        <!-- Page heading -->
-        <h2>Follow-Up Message History</h2>
+    <div class="content-container">
+        <div class="page-header">
+            <h2><?php echo $page_title; ?></h2>
+            <p><?php echo $page_subtitle; ?></p>
+        </div>
 
-        <?php if ($result->num_rows > 0): ?>
-            <?php while ($row = $result->fetch_assoc()): ?>
-                <!-- Single follow-up card -->
+        <?php if (count($messages) > 0): ?>
+            <?php foreach ($messages as $row): ?>
                 <div class="followup-card">
-                    <!-- Pet name -->
-                    <p>
-                        <strong>Pet:</strong>
-                        <?php echo htmlspecialchars($row['pet_name']); ?>
-                    </p>
-
-                    <!-- Adopter name -->
-                    <p>
-                        <strong>Adopter:</strong>
-                        <?php echo htmlspecialchars($row['adopter_name']); ?>
-                    </p>
-
-                    <!-- Message content; `nl2br` to preserve new lines -->
-                    <p>
-    <strong>Message:</strong>
-    <?php echo nl2br(htmlspecialchars($row['message'])); ?>
-</p>
-                    <!-- Timestamp -->
-                    <p>
-                        <em>Sent at: <?php echo htmlspecialchars($row['sent_at']); ?></em>
-                    </p>
+                    <div class="card-header">
+                        <div class="info">
+                            <?php if ($pet_id_filter === 0): ?>
+                                <p><strong>Pet:</strong> <?php echo htmlspecialchars($row['pet_name']); ?></p>
+                            <?php endif; ?>
+                            <p><strong>To:</strong> <?php echo htmlspecialchars($row['adopter_name']); ?></p>
+                        </div>
+                        <span class="timestamp"><?php echo date("M j, Y, g:i A", strtotime($row['sent_at'])); ?></span>
+                    </div>
+                    <div class="message-text">
+                        <?php echo nl2br(htmlspecialchars($row['message'])); ?>
+                    </div>
                 </div>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         <?php else: ?>
-            <!-- Display when no follow-up messages exist -->
-            <p class="no-messages">No follow-up messages sent yet.</p>
+            <p class="no-messages">No follow-up messages found for this selection.</p>
         <?php endif; ?>
     </div>
 
-    <!-- Include footer (assumes ../includes/footer.php exists) -->
     <?php include('../includes/footer.php'); ?>
 </body>
 </html>

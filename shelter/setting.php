@@ -11,6 +11,7 @@ include('../db_connection.php');
 
 $user_id = $_SESSION['user_id'];
 $msg = "";
+$msg_class = "";
 
 // Process form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -35,9 +36,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Execute query and set feedback message
     if ($stmt->execute()) {
-        $msg = "✅ Profile updated successfully.";
+        $msg = "Profile updated successfully.";
+        $msg_class = "success";
     } else {
-        $msg = "⚠️ Update failed: " . htmlspecialchars($stmt->error);
+        $msg = "Update failed: " . htmlspecialchars($stmt->error);
+        $msg_class = "error";
     }
 }
 
@@ -55,85 +58,157 @@ $user = $stmt->get_result()->fetch_assoc();
     <meta charset="UTF-8">
     <title>Shelter Profile Settings</title>
     <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/shelter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
         body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .content-container {
+            padding-top: 20px;
+            padding-bottom: 40px;
         }
         .form-container {
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 30px;
-            background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
-        .form-container h2 {
-            margin-bottom: 20px;
+        .form-header h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
+            margin-bottom: 30px;
         }
-        label {
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 0;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
             display: block;
-            margin-top: 10px;
+            margin-bottom: 0.5rem;
             font-weight: 600;
+            color: #444;
         }
-        input {
+        .form-group input {
             width: 100%;
-            padding: 8px;
-            margin-top: 4px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #fff;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
-        button {
-            background-color: #000;
+        .form-group input:focus {
+            outline: none;
+            border-color: #4e8cff;
+            box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.3);
+        }
+        .button {
+            display: inline-block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
             color: #fff;
-            padding: 10px 15px;
+            background-image: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
             border: none;
-            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-align: center;
             cursor: pointer;
-            margin-top: 15px;
         }
-        button:hover {
-            opacity: 0.9;
+        .button:hover {
+            box-shadow: 0 4px 15px rgba(78, 140, 255, 0.4);
+            transform: translateY(-2px);
         }
-        .msg {
-            color: green;
-            margin-bottom: 10px;
+        .message {
+            text-align: center;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            grid-column: 1 / -1;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
 <body>
 <?php include('../includes/navbar_shelter.php'); ?>
 
-<div class="form-container">
-    <h2>Shelter Profile Settings</h2>
-    <?php if (!empty($msg)): ?>
-        <p class="msg"><?= $msg; ?></p>
-    <?php endif; ?>
+<div class="content-container">
+    <div class="form-container">
+        <div class="form-header">
+            <h2>Shelter Profile Settings</h2>
+        </div>
+        <form method="post" class="form-grid">
+            <?php if (!empty($msg)): ?>
+                <div class="message <?php echo $msg_class; ?>"><?= htmlspecialchars($msg); ?></div>
+            <?php endif; ?>
 
-    <form method="post">
-        <label for="username">Username:</label>
-        <input id="username" type="text" name="username" value="<?= htmlspecialchars($user['username']); ?>" required>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input id="username" type="text" name="username" value="<?= htmlspecialchars($user['username']); ?>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input id="email" type="email" name="email" value="<?= htmlspecialchars($user['email']); ?>" required>
+            </div>
 
-        <label for="first_name">First Name:</label>
-        <input id="first_name" type="text" name="first_name" value="<?= htmlspecialchars($user['first_name']); ?>" required>
+            <div class="form-group">
+                <label for="first_name">First Name:</label>
+                <input id="first_name" type="text" name="first_name" value="<?= htmlspecialchars($user['first_name']); ?>" required>
+            </div>
 
-        <label for="last_name">Last Name:</label>
-        <input id="last_name" type="text" name="last_name" value="<?= htmlspecialchars($user['last_name']); ?>" required>
+            <div class="form-group">
+                <label for="last_name">Last Name:</label>
+                <input id="last_name" type="text" name="last_name" value="<?= htmlspecialchars($user['last_name']); ?>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone_number">Phone Number:</label>
+                <input id="phone_number" type="text" name="phone_number" value="<?= htmlspecialchars($user['phone_number']); ?>" required>
+            </div>
 
-        <label for="email">Email:</label>
-        <input id="email" type="email" name="email" value="<?= htmlspecialchars($user['email']); ?>" required>
+            <div class="form-group">
+                <label for="password">New Password:</label>
+                <input id="password" type="password" name="password" placeholder="Leave blank to keep current">
+            </div>
 
-        <label for="password">Password (leave blank to keep current):</label>
-        <input id="password" type="password" name="password">
-
-        <label for="phone_number">Phone Number:</label>
-        <input id="phone_number" type="text" name="phone_number" value="<?= htmlspecialchars($user['phone_number']); ?>" required>
-
-        <button type="submit">Update Profile</button>
-    </form>
+            <div class="form-group full-width">
+                <button type="submit" class="button">Update Profile</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <?php include('../includes/footer.php'); ?>

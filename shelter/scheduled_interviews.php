@@ -39,112 +39,109 @@ $result = $stmt->get_result();
     <meta charset="UTF-8">
     <title>Scheduled Interviews</title>
     <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
         body {
-            background-color: #f5f5f5;
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            color: #333;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
-        /* Centered container for the card */
-        .page-wrapper {
-            max-width: 900px;
-            margin: 80px auto;
-            padding: 32px;
-            background-color: #ffffff;
+        .content-container {
+            max-width: 1100px;
+            margin: 80px auto 40px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.92);
             border-radius: 16px;
-            border: 1px solid #e0e0e0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
-
-        
-
-        /* Table styling */
-        table {
+        .page-header h1 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+        .styled-table {
             width: 100%;
             border-collapse: collapse;
-            border-radius: 8px;
-            overflow: hidden;
+            font-size: 15px;
         }
-
-        /* Table header row */
-        th {
-            background-color: #f0f0f0; /* very light grey */
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: 500;
+        .styled-table th, .styled-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
             text-align: left;
-            color: #333;
         }
-
-        /* Table body cells */
-        td {
-            padding: 12px 16px;
-            font-size: 14px;
-            border-bottom: 1px solid #e0e0e0; /* subtle divider */
+        .styled-table th {
+            font-weight: 600;
             color: #555;
+            background-color: rgba(255,255,255,0.7);
         }
-
-        /* Remove last row’s border */
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Status text styling */
+        .styled-table tr:last-child td { border-bottom: none; }
         .status {
-            font-weight: 500;
+            font-weight: 600;
             text-transform: capitalize;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 13px;
+            display: inline-block;
         }
-
-        /* “No interviews” message styling */
+        .status.confirmed { color: #1e6b3b; background-color: #d1f7de; }
+        .status.pending { color: #9c5400; background-color: #fff1e0; }
+        .status.rejected { color: #a82222; background-color: #ffe6e6; }
         .no-data {
             text-align: center;
-            padding: 24px;
+            font-size: 1.2rem;
             color: #777;
-            font-size: 16px;
+            padding: 3rem;
+            background: rgba(255,255,255,0.7);
+            border-radius: 12px;
         }
     </style>
 </head>
 <body>
-
-    <!-- Include shelter-specific navbar -->
     <?php include('../includes/navbar_shelter.php'); ?>
-
-    <div class="page-wrapper">
-        <div class="box">
-            <h2>📅 Scheduled Interviews</h2>
-
-            <?php if ($result->num_rows > 0): ?>
-                <table>
-                    <tr>
-                        <th>Adopter</th>
-                        <th>Pet</th>
-                        <th>Date &amp; Time</th>
-                        <th>Status</th>
-                    </tr>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+    <div class="content-container">
+        <div class="page-header"><h1>📅 Scheduled Interviews</h1></div>
+        <?php if ($result->num_rows > 0): ?>
+            <div class="table-container">
+                <table class="styled-table">
+                    <thead>
                         <tr>
-                            <!-- Escape output to prevent XSS -->
-                            <td><?= htmlspecialchars($row['adopter_name']) ?></td>
-                            <td><?= htmlspecialchars($row['pet_name']) ?></td>
-                            <td>
-                                <?= date("j M Y, h:i A", strtotime($row['interview_datetime'])) ?>
-                            </td>
-                            <td class="status">
-                                <?= htmlspecialchars($row['status']) ?>
-                            </td>
+                            <th>Adopter</th>
+                            <th>Pet</th>
+                            <th>Date & Time</th>
+                            <th>Status</th>
                         </tr>
-                    <?php endwhile; ?>
+                    </thead>
+                    <tbody>
+                        <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($row['adopter_name']); ?></td>
+                                <td><?php echo htmlspecialchars($row['pet_name']); ?></td>
+                                <td><?php echo date("F j, Y, h:i A", strtotime($row['interview_datetime'])); ?></td>
+                                <td>
+                                    <span class="status <?php echo strtolower(htmlspecialchars($row['status'])); ?>">
+                                        <?php echo ucfirst(htmlspecialchars($row['status'])); ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
                 </table>
-            <?php else: ?>
-                <div class="no-data">
-                    No interviews found.
-                </div>
-            <?php endif; ?>
-        </div>
+            </div>
+        <?php else: ?>
+            <p class="no-data">No scheduled interviews found.</p>
+        <?php endif; ?>
     </div>
-
-    <!-- Include global footer; this should stick to the bottom -->
     <?php include('../includes/footer.php'); ?>
 </body>
 </html>

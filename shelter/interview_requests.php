@@ -99,154 +99,139 @@ $listStmt->close();
     <meta charset="UTF-8">
     <title>Interview Requests</title>
     <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/shelter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
-        /* Base styles */
         body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
-        /* Container for the entire content */
-        .page-wrapper {
-            max-width: 900px;
-            margin: 80px auto;
-            padding: 32px;
-            background-color: #ffffff;
+        .content-container {
+            max-width: 1100px;
+            margin: 80px auto 40px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.92);
             border-radius: 16px;
-            border: 1px solid #e0e0e0;
-            
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
-
-        h2 {
+        .page-header h1 {
             text-align: center;
-            margin-bottom: 24px;
-            font-size: 26px;
-            font-weight: 600;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
+            margin-bottom: 30px;
         }
-
-        /* Table styling */
-        table {
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+        .styled-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
-            background-color: #fafafa;
-            border-radius: 8px;
-            overflow: hidden;
+            font-size: 15px;
         }
-
-        th, td {
-            padding: 12px 16px;
+        .styled-table th, .styled-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
             text-align: left;
+            vertical-align: middle;
         }
-
-        th {
-            background-color: #f0f0f0;
-            font-weight: 500;
+        .styled-table th {
+            font-weight: 600;
+            color: #555;
+            background-color: rgba(255,255,255,0.7);
         }
-
-        tr + tr td {
-            border-top: 1px solid #e0e0e0;
+        .styled-table tr:last-child td { border-bottom: none; }
+        .status-text {
+            font-weight: 600;
+            text-transform: capitalize;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 13px;
         }
-
-        /* Action buttons (Confirm / Reject) */
+        .status-text.confirmed { color: #1e6b3b; background-color: #d1f7de; }
+        .status-text.rejected { color: #a82222; background-color: #ffe6e6; }
+        .action-cell { display: flex; gap: 10px; }
         .action-btn {
-            background-color: #000;
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
             color: #fff;
+            transition: all 0.3s;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
             cursor: pointer;
+            font-family: inherit;
             font-size: 14px;
         }
-
-        .action-btn:hover {
-            opacity: 0.9;
-        }
-
-        /* Status text when already handled */
-        .status-text {
-            font-weight: 500;
-            text-transform: capitalize;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            .page-wrapper {
-                margin: 40px 16px;
-                padding: 24px;
-            }
-
-            th, td {
-                padding: 10px 12px;
-                font-size: 14px;
-            }
-
-            h2 {
-                font-size: 22px;
-            }
+        .action-btn.confirm { background-color: #28a745; }
+        .action-btn.confirm:hover { background-color: #218838; transform: translateY(-2px); }
+        .action-btn.reject { background-color: #dc3545; }
+        .action-btn.reject:hover { background-color: #c82333; transform: translateY(-2px); }
+        .no-data {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #777;
+            padding: 3rem;
+            background: rgba(255,255,255,0.7);
+            border-radius: 12px;
         }
     </style>
 </head>
 <body>
-
-    <!-- Navbar (shelter version) -->
     <?php include('../includes/navbar_shelter.php'); ?>
-
-    <div class="page-wrapper">
-        <h2>📨 Interview Requests</h2>
-
+    <div class="content-container">
+        <div class="page-header"><h1>📨 Interview Requests</h1></div>
         <?php if ($result->num_rows > 0): ?>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Adopter</th>
-                        <th>Pet</th>
-                        <th>Scheduled At</th>
-                        <th>Status / Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+            <div class="table-container">
+                <table class="styled-table">
+                    <thead>
                         <tr>
-                            <td><?= htmlspecialchars($row['adopter_name']); ?></td>
-                            <td><?= htmlspecialchars($row['pet_name']); ?></td>
-                            <td>
-                                <?php
-                                    // Format the interview date/time
-                                    echo date("d M Y, h:i A", strtotime($row['interview_datetime']));
-                                ?>
-                            </td>
-                            <td>
-                                <?php if ($row['status'] === 'pending'): ?>
-                                    <!-- Confirm button -->
-                                    <form method="POST" style="display:inline-block;" onsubmit="return confirm('Confirm this interview?');">
-                                        <input type="hidden" name="interview_id" value="<?= $row['id']; ?>">
-                                        <input type="hidden" name="action" value="confirm">
-                                        <button type="submit" class="action-btn">✅ Confirm</button>
-                                    </form>
-
-                                    <!-- Reject button -->
-                                    <form method="POST" style="display:inline-block;" onsubmit="return confirm('Reject this interview?');">
-                                        <input type="hidden" name="interview_id" value="<?= $row['id']; ?>">
-                                        <input type="hidden" name="action" value="reject">
-                                        <button type="submit" class="action-btn">❌ Reject</button>
-                                    </form>
-                                <?php else: ?>
-                                    <!-- Show status text if already confirmed/rejected -->
-                                    <span class="status-text"><?= htmlspecialchars($row['status']); ?></span>
-                                <?php endif; ?>
-                            </td>
+                            <th>Adopter</th>
+                            <th>Pet</th>
+                            <th>Requested Time</th>
+                            <th>Action</th>
                         </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($row['adopter_name']); ?></td>
+                                <td><?php echo htmlspecialchars($row['pet_name']); ?></td>
+                                <td><?php echo date("F j, Y, h:i A", strtotime($row['interview_datetime'])); ?></td>
+                                <td>
+                                    <?php if ($row['status'] === 'pending'): ?>
+                                        <div class="action-cell">
+                                            <form method="POST" onsubmit="return confirm('Confirm this interview?');">
+                                                <input type="hidden" name="interview_id" value="<?php echo $row['id']; ?>">
+                                                <input type="hidden" name="action" value="confirm">
+                                                <button type="submit" class="action-btn confirm">Confirm</button>
+                                            </form>
+                                            <form method="POST" onsubmit="return confirm('Reject this interview?');">
+                                                <input type="hidden" name="interview_id" value="<?php echo $row['id']; ?>">
+                                                <input type="hidden" name="action" value="reject">
+                                                <button type="submit" class="action-btn reject">Reject</button>
+                                            </form>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="status-text <?php echo strtolower($row['status']); ?>"><?php echo htmlspecialchars($row['status']); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php else: ?>
-            <p style="text-align: center; margin-top: 24px;">No interview requests yet.</p>
+            <p class="no-data">No new interview requests.</p>
         <?php endif; ?>
     </div>
-<?php include('../includes/footer.php'); ?>
+    <?php include('../includes/footer.php'); ?>
 </body>
 </html>
