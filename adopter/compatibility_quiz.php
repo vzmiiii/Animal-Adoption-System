@@ -9,8 +9,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
 include('../db_connection.php');
 
 $suggestions = [];
+$form_submitted = false;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $form_submitted = true;
     // Collect answers
     $lifestyle = $_POST['lifestyle'];
     $home_type = $_POST['home_type'];
@@ -21,58 +23,64 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $noise_level = $_POST['noise_level'];
     $likes_cuddle = $_POST['likes_cuddle'];
 
-    $sql = "SELECT * FROM pets WHERE status = 'available'";
+    // Base SQL with JOIN to get shelter name
+    $sql = "SELECT p.*, u.username AS shelter_name
+            FROM pets p
+            JOIN users u ON p.shelter_id = u.id
+            WHERE p.status = 'available'";
 
     // Lifestyle affects species
     if ($lifestyle === "active") {
-        $sql .= " AND species = 'Dog'";
+        $sql .= " AND p.species = 'Dog'";
     } elseif ($lifestyle === "quiet") {
-        $sql .= " AND species = 'Cat'";
+        $sql .= " AND p.species = 'Cat'";
     }
 
     // Home type affects species and age/size compatibility
     if (in_array($home_type, ["highrise", "flat"])) {
-        $sql .= " AND (species != 'Dog' OR age <= 5)"; // no large dogs in small homes
+        $sql .= " AND (p.species != 'Dog' OR p.age <= 5)"; // no large dogs in small homes
     }
 
     // Experience level affects ease of handling
     if ($experience === "first_time") {
-        $sql .= " AND age <= 3";
+        $sql .= " AND p.age <= 3";
     }
 
     // Kids should be paired with younger, gentler pets
     if ($has_kids === "yes") {
-        $sql .= " AND age <= 5";
+        $sql .= " AND p.age <= 5";
     }
 
     // Gender preference
     if ($preferred_gender !== "no_pref") {
-        $sql .= " AND gender = '" . $conn->real_escape_string($preferred_gender) . "'";
+        $sql .= " AND p.gender = '" . $conn->real_escape_string($preferred_gender) . "'";
     }
 
     // Age range
     if ($preferred_age === "young") {
-        $sql .= " AND age <= 2";
+        $sql .= " AND p.age <= 2";
     } elseif ($preferred_age === "adult") {
-        $sql .= " AND age > 2 AND age <= 7";
+        $sql .= " AND p.age > 2 AND p.age <= 7";
     } elseif ($preferred_age === "senior") {
-        $sql .= " AND age > 7";
+        $sql .= " AND p.age > 7";
     }
 
     // Noise preference
     if ($noise_level === "quiet") {
-        $sql .= " AND species = 'Cat'";
+        $sql .= " AND p.species = 'Cat'";
     }
 
     // Cuddly pets assumed to be younger and calmer
     if ($likes_cuddle === "yes") {
-        $sql .= " AND age <= 4";
+        $sql .= " AND p.age <= 4";
     }
 
     // Execute query
     $result = $conn->query($sql);
-    while ($row = $result->fetch_assoc()) {
-        $suggestions[] = $row;
+    if($result) {
+        while ($row = $result->fetch_assoc()) {
+            $suggestions[] = $row;
+        }
     }
 }
 ?>
@@ -84,139 +92,189 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Compatibility Quiz</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
-body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2)),
-                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #333;
+        :root {
+            --accent-gradient: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            --text-color: #333;
+            --text-color-light: #555;
+            --container-bg: rgba(255, 255, 255, 0.92);
+            --border-color: #e0e0e0;
+            --shadow: 0 8px 25px rgba(0,0,0,0.1);
+            --border-radius: 16px;
         }
 
-.page-wrapper {
-    width: 90%;
-    max-width: 700px;
-    margin: 40px auto;
-    padding: 40px 50px;
-    background-color: #fef9ec;
-    border-radius: 25px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
-}
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-color);
+        }
 
-h2 {
-    font-size: 26px;
-    font-weight: 600;
-    margin-bottom: 30px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        .page-wrapper {
+            max-width: 800px;
+            margin: 80px auto 40px;
+            padding: 40px;
+            background: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
 
-.section-title {
-    margin-top: 30px;
-    margin-bottom: 10px;
-    font-size: 18px;
-    color: #444;
-    border-left: 4px solid #4caf50;
-    padding-left: 10px;
-}
+        h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-color-light);
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-form .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-}
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
 
-form label {
-    font-weight: 500;
-    margin-bottom: 6px;
-}
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-form select {
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 15px;
-    border: 1px solid #ccc;
-}
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-color-light);
+        }
 
-form button {
-    background-color: #000;
-    color: white;
-    border: none;
-    padding: 14px 20px;
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
-    width: 100%;
-}
+        select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
 
-form button:hover {
-    background-color: #333;
-    transform: scale(1.02);
-}
+        button {
+            grid-column: 1 / -1;
+            width: 100%;
+            padding: 15px;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
 
-.recommended-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    margin-top: 30px;
-}
+        .results-wrapper {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .recommended-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 30px;
+        }
 
-.pet-card {
-    background-color: #fff;
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    transition: transform 0.2s ease;
-}
+        .pet-card {
+            background: #fff;
+            border-radius: var(--border-radius);
+            padding: 0;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+        }
 
-.pet-card:hover {
-    transform: scale(1.02);
-}
+        .pet-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
 
-.pet-card img {
-    width: 100%;
-    max-height: 180px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 12px;
-}
+        .pet-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .pet-card-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
 
-.pet-card h3 {
-    margin: 0;
-    font-size: 20px;
-    color: #222;
-}
+        .pet-card h3 {
+            margin: 0 0 8px;
+            font-size: 22px;
+        }
+        
+        .pet-card p {
+            margin: 2px 0;
+            font-size: 14px;
+            color: var(--text-color-light);
+            line-height: 1.5;
+        }
+        
+        .pet-card .description {
+            flex-grow: 1;
+            margin-top: 10px;
+        }
 
-.pet-card p {
-    margin: 6px 0;
-    font-size: 14px;
-    color: #555;
-}
-
-.pet-card a {
-    margin-top: 10px;
-    display: inline-block;
-    background-color: #000;
-    color: #fff;
-    padding: 10px 16px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-p.no-result {
-    font-style: italic;
-    color: #555;
-    margin-top: 30px;
-    text-align: center;
-}
-</style>
+        .pet-card a.adopt-btn {
+            margin-top: 15px;
+            display: block;
+            background: var(--accent-gradient);
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .empty-msg {
+            text-align: center;
+            color: var(--text-color-light);
+            font-size: 16px;
+            padding: 30px;
+            background: rgba(255,255,255,0.5);
+            border-radius: var(--border-radius);
+        }
+    </style>
 </head>
 <body>
 
@@ -224,103 +282,107 @@ p.no-result {
 
 <div class="page-wrapper">
     <h2>🧩 Compatibility Quiz</h2>
+    <p style="text-align:center; margin-top:-20px; margin-bottom:30px; color: var(--text-color-light);">Answer a few questions to find the perfect companion for you!</p>
 
     <form method="post">
-
-    <h3 class="section-title">Your Lifestyle</h3>
-
-    <div class="form-group">
-        <label>Your Lifestyle:</label>
-        <select name="lifestyle" required>
-            <option value="active">Active & Outdoorsy</option>
-            <option value="quiet">Calm & Indoors</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Your Home Type:</label>
-        <select name="home_type" required>
-            <option value="bungalow">Bungalow</option>
-            <option value="terrace">Terrace</option>
-            <option value="highrise">High-Rise Apartment</option>
-            <option value="flat">Flat</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Pet Experience Level:</label>
-        <select name="experience" required>
-            <option value="first_time">First-time Pet Owner</option>
-            <option value="experienced">Experienced</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Do You Have Children?</label>
-        <select name="has_kids" required>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-        </select>
-    </div>
-
-    <h3 class="section-title">Pet Preferences</h3>
-
-    <div class="form-group">
-        <label>Preferred Pet Gender:</label>
-        <select name="preferred_gender" required>
-            <option value="no_pref">No Preference</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Preferred Pet Age:</label>
-        <select name="preferred_age" required>
-            <option value="young">0–2 years</option>
-            <option value="adult">3–7 years</option>
-            <option value="senior">8+ years</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Do You Prefer a Quiet Pet?</label>
-        <select name="noise_level" required>
-            <option value="quiet">Yes, I prefer quiet pets</option>
-            <option value="any">No preference</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Do You Want a Pet That Likes to Cuddle?</label>
-        <select name="likes_cuddle" required>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-        </select>
-    </div>
-
-    <button type="submit">Get Recommendations</button>
-</form>
-
-    <div class="recommended-grid">
-<?php foreach ($suggestions as $pet): ?>
-    <div class="pet-card">
-        <?php if (!empty($pet['image'])): ?>
-            <img src="../images/pets/<?php echo htmlspecialchars($pet['image']); ?>" alt="Pet image">
-        <?php else: ?>
-            <img src="../images/pets/default.jpg" alt="Default image">
-        <?php endif; ?>
-        <h3><?php echo htmlspecialchars($pet['name']); ?></h3>
-        <p><?php echo htmlspecialchars($pet['species']); ?> • 
-           <?php echo htmlspecialchars($pet['age']) . " yrs"; ?> • 
-           <?php echo htmlspecialchars($pet['gender']); ?></p>
-        <p><em><?php echo htmlspecialchars($pet['breed']); ?></em></p>
-        <p>Shelter: <?php echo htmlspecialchars($pet['shelter_name'] ?? 'Unknown'); ?></p>
-        <a href="view_pet.php?id=<?php echo $pet['id']; ?>">View Details</a>
-    </div>
-<?php endforeach; ?>
-</div>
+        <h3 class="section-title">About You & Your Home</h3>
+        <div class="form-group">
+            <label for="lifestyle">What's your lifestyle like?</label>
+            <select id="lifestyle" name="lifestyle" required>
+                <option value="active">Active & Outdoorsy</option>
+                <option value="quiet">Calm & Indoors</option>
+            </select>
         </div>
+        <div class="form-group">
+            <label for="home_type">What's your home type?</label>
+            <select id="home_type" name="home_type" required>
+                <option value="bungalow">Bungalow</option>
+                <option value="terrace">Terrace</option>
+                <option value="highrise">High-Rise Apartment</option>
+                <option value="flat">Flat</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="experience">What's your experience with pets?</label>
+            <select id="experience" name="experience" required>
+                <option value="first_time">First-time Pet Owner</option>
+                <option value="experienced">Experienced</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="has_kids">Do you have children at home?</label>
+            <select id="has_kids" name="has_kids" required>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
+
+        <h3 class="section-title">Your Future Pet</h3>
+        <div class="form-group">
+            <label for="preferred_gender">Preferred pet gender?</label>
+            <select id="preferred_gender" name="preferred_gender" required>
+                <option value="no_pref">No Preference</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="preferred_age">Preferred pet age?</label>
+            <select id="preferred_age" name="preferred_age" required>
+                <option value="young">Young (0-2 years)</option>
+                <option value="adult">Adult (3-7 years)</option>
+                <option value="senior">Senior (8+ years)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="noise_level">Do you prefer a quiet pet?</label>
+            <select id="noise_level" name="noise_level" required>
+                <option value="quiet">Yes, peace and quiet is a must</option>
+                <option value="any">A little noise is fine</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="likes_cuddle">Do you want a cuddly pet?</label>
+            <select id="likes_cuddle" name="likes_cuddle" required>
+                <option value="yes">Yes, give me all the cuddles!</option>
+                <option value="no">No, I prefer an independent pet</option>
+            </select>
+        </div>
+        <button type="submit">Find My Match</button>
+    </form>
+
+    <?php if ($form_submitted): ?>
+        <div class="results-wrapper">
+            <h2>Your Recommended Pets</h2>
+            <?php if (!empty($suggestions)): ?>
+                <div class="recommended-grid">
+                    <?php foreach ($suggestions as $pet): ?>
+                        <div class="pet-card">
+                            <?php if (!empty($pet['image'])): ?>
+                                <img src="../images/pets/<?= htmlspecialchars($pet['image']) ?>" alt="Pet Image">
+                            <?php else: ?>
+                                <img src="../images/pets/default.jpg" alt="Default Image">
+                            <?php endif; ?>
+                            <div class="pet-card-content">
+                                <h3><?= htmlspecialchars($pet['name']) ?></h3>
+                                <p><?= htmlspecialchars($pet['breed']) ?></p>
+                                <p class="description">
+                                    <?= htmlspecialchars($pet['age']) ?> years old |
+                                    <?= htmlspecialchars($pet['gender']) ?> |
+                                    <?= htmlspecialchars($pet['species']) ?>
+                                </p>
+                                <p><strong>Shelter:</strong> <?= htmlspecialchars($pet['shelter_name']) ?></p>
+                                <a href="view_pet.php?id=<?= $pet['id'] ?>" class="adopt-btn">View Details</a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <p class="empty-msg">No pets matched your criteria. Try adjusting your preferences!</p>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</div>
 <?php include('../includes/footer.php'); ?>
 </body>
 </html>

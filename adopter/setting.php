@@ -44,60 +44,120 @@ $user = $result->fetch_assoc();
     <title>Adopter Settings</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
+        :root {
+            --accent-gradient: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            --text-color: #333;
+            --text-color-light: #555;
+            --container-bg: rgba(255, 255, 255, 0.92);
+            --border-color: #e0e0e0;
+            --shadow: 0 8px 25px rgba(0,0,0,0.1);
+            --border-radius: 16px;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-color);
+        }
+
         .settings-wrapper {
-            width: 60%;
             max-width: 700px;
-            margin: 80px auto;
-            background-color: #fef9ec;
+            margin: 80px auto 40px;
             padding: 40px;
-            border-radius: 30px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+            background: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
 
         .settings-wrapper h2 {
-            font-size: 26px;
-            margin-bottom: 25px;
             text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        .settings-wrapper label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
             font-size: 14px;
+            color: var(--text-color-light);
         }
 
-        .settings-wrapper input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-
-        .settings-wrapper button {
+        input {
             width: 100%;
             padding: 14px;
-            background-color: #000;
-            color: #fff;
-            border: none;
-            border-radius: 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 14px;
-            cursor: pointer;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .settings-wrapper .success-msg {
-            background-color: #e7fbe7;
-            color: #246b24;
-            padding: 12px;
+        input:focus {
+            outline: none;
+            border-color: #6ed6a5;
+            box-shadow: 0 0 0 3px rgba(110, 214, 165, 0.18);
+        }
+
+        input[readonly] {
+            background-color: #f1f1f1;
+            cursor: not-allowed;
+            color: #777;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
             border-radius: 10px;
-            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            grid-column: 1 / -1;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .success-msg {
+            background-color: #d1f7de;
+            color: #1e6b3b;
+            padding: 15px;
+            border-radius: 10px;
             font-weight: 500;
             text-align: center;
+            border: 1px solid #b2e8c2;
         }
     </style>
 </head>
@@ -108,34 +168,37 @@ $user = $result->fetch_assoc();
 <div class="settings-wrapper">
     <h2>⚙️ My Settings</h2>
 
-    <!-- Show message if profile is updated -->
     <?php if (!empty($msg)): ?>
         <div class="success-msg"><?php echo htmlspecialchars($msg); ?></div>
     <?php endif; ?>
 
-    <!-- Settings form -->
     <form method="post">
-        <!-- Username (readonly for now) -->
-        <label>Username:</label>
-        <input type="text" name="username" readonly value="<?php echo htmlspecialchars($user['username']); ?>">
+        <div class="input-group">
+            <label for="first_name">First Name</label>
+            <input type="text" id="first_name" name="first_name" required value="<?php echo htmlspecialchars($user['first_name']); ?>">
+        </div>
 
-        <!-- First Name -->
-        <label>First Name:</label>
-        <input type="text" name="first_name" required value="<?php echo htmlspecialchars($user['first_name']); ?>">
+        <div class="input-group">
+            <label for="last_name">Last Name</label>
+            <input type="text" id="last_name" name="last_name" required value="<?php echo htmlspecialchars($user['last_name']); ?>">
+        </div>
 
-        <!-- Last Name -->
-        <label>Last Name:</label>
-        <input type="text" name="last_name" required value="<?php echo htmlspecialchars($user['last_name']); ?>">
+        <div class="input-group full-width">
+            <label for="phone_number">Phone Number</label>
+            <input type="text" id="phone_number" name="phone_number" required value="<?php echo htmlspecialchars($user['phone_number']); ?>">
+        </div>
+        
+        <div class="input-group full-width">
+            <label for="username">Username (cannot be changed)</label>
+            <input type="text" id="username" name="username" readonly value="<?php echo htmlspecialchars($user['username']); ?>">
+        </div>
+        
+        <div class="input-group full-width">
+            <label for="email">Email (cannot be changed)</label>
+            <input type="text" id="email" name="email" readonly value="<?php echo htmlspecialchars($user['email']); ?>">
+        </div>
 
-        <!-- Phone Number -->
-        <label>Phone Number:</label>
-        <input type="text" name="phone_number" required value="<?php echo htmlspecialchars($user['phone_number']); ?>">
-
-        <!-- Email (readonly for now) -->
-        <label>Email:</label>
-        <input type="text" name="email" readonly value="<?php echo htmlspecialchars($user['email']); ?>">
-
-        <button type="submit">Update</button>
+        <button type="submit">Update Profile</button>
     </form>
 </div>
 

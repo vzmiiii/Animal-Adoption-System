@@ -35,19 +35,44 @@ if ($update) {
     <title>My Notifications</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
-        .notif-box {
-            max-width: 900px;
-            margin: 80px auto;
+        :root {
+            --text-color: #333;
+            --text-color-light: #555;
+            --container-bg: rgba(255, 255, 255, 0.92);
+            --border-color: #e0e0e0;
+            --shadow: 0 8px 25px rgba(0,0,0,0.1);
+            --border-radius: 16px;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-color);
+        }
+
+        .notifications-wrapper {
+            max-width: 800px;
+            margin: 80px auto 40px;
             padding: 40px;
-            background-color: #fef9ec;
-            border-radius: 30px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+            background: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
 
         h2 {
             text-align: center;
-            font-size: 28px;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
             margin-bottom: 30px;
         }
 
@@ -56,27 +81,39 @@ if ($update) {
             padding: 0;
         }
 
-        li {
-            background: #fff;
-            margin-bottom: 12px;
-            padding: 16px 20px;
-            border-radius: 12px;
-            border: 1px solid #ddd;
-            font-size: 15px;
-            position: relative;
+        li.notification-item {
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         }
 
-        em {
-            font-size: 12px;
-            color: #888;
-            display: block;
-            margin-top: 6px;
+        .notification-item span {
+            flex-grow: 1;
+        }
+
+        .notification-item em {
+            font-size: 13px;
+            color: var(--text-color-light);
+            font-style: normal;
+            flex-shrink: 0;
+            margin-left: 20px;
         }
 
         .empty-msg {
             text-align: center;
-            color: #666;
+            color: var(--text-color-light);
+            margin-top: 40px;
             font-size: 16px;
+            padding: 30px;
+            background: rgba(255,255,255,0.5);
+            border-radius: var(--border-radius);
         }
     </style>
 </head>
@@ -84,14 +121,14 @@ if ($update) {
 
 <?php include('../includes/navbar_adopter.php'); ?>
 
-<div class="notif-box">
+<div class="notifications-wrapper">
     <h2>🔔 My Notifications</h2>
     <ul>
         <?php if ($result->num_rows > 0): ?>
             <?php while ($n = $result->fetch_assoc()): ?>
-                <li>
-                    <?= htmlspecialchars($n['message']) ?>
-                    <em><?= date("d M Y, h:i A", strtotime($n['created_at'])) ?></em>
+                <li class="notification-item">
+                    <span><?= htmlspecialchars($n['message']) ?></span>
+                    <em><?= date("F j, Y, g:i A", strtotime($n['created_at'])) ?></em>
                 </li>
             <?php endwhile; ?>
         <?php else: ?>

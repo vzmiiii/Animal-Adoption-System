@@ -48,23 +48,119 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Schedule Interview</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
+    <style>
+        :root {
+            --accent-gradient: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            --text-color: #333;
+            --text-color-light: #555;
+            --container-bg: rgba(255, 255, 255, 0.92);
+            --border-color: #e0e0e0;
+            --shadow: 0 8px 25px rgba(0,0,0,0.1);
+            --border-radius: 16px;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-color);
+        }
+
+        .schedule-wrapper {
+            max-width: 600px;
+            margin: 80px auto 40px;
+            padding: 40px;
+            background: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-color-light);
+        }
+
+        input[type="datetime-local"] {
+            width: 100%;
+            max-width: 300px;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="datetime-local"]:focus {
+            outline: none;
+            border-color: #6ed6a5;
+            box-shadow: 0 0 0 3px rgba(110, 214, 165, 0.18);
+        }
+
+        button {
+            width: 100%;
+            max-width: 300px;
+            padding: 15px;
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+    </style>
 </head>
 <body>
 
-<div class="tracker-wrapper">
+<?php include('../includes/navbar_adopter.php'); ?>
+
+<div class="schedule-wrapper">
     <h2>📅 Schedule Interview for <?= htmlspecialchars($data['pet_name']) ?></h2>
     <form method="POST">
-        <label for="interview_datetime">Select Date & Time:</label><br><br>
-        <input type="datetime-local" name="interview_datetime" required>
-        <br><br>
-        <button type="submit" class="schedule-btn">Submit</button>
+        <label for="interview_datetime">Select a date and time for your interview:</label>
+        <input type="datetime-local" id="interview_datetime" name="interview_datetime" required>
+        <button type="submit">Confirm Interview Slot</button>
     </form>
 </div>
+
+<?php include('../includes/footer.php'); ?>
 
 </body>
 </html>

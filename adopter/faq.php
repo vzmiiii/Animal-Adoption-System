@@ -13,61 +13,102 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
     <title>Frequently Asked Questions</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
+        :root {
+            --text-color: #333;
+            --text-color-light: #555;
+            --container-bg: rgba(255, 255, 255, 0.92);
+            --border-color: #e0e0e0;
+            --shadow: 0 8px 25px rgba(0,0,0,0.1);
+            --border-radius: 16px;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-color);
+        }
+
         .faq-wrapper {
-            max-width: 900px;
-            margin: 60px auto;
-            padding: 40px 50px;
-            background: #fef9ec;
-            border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            margin: 80px auto 40px;
+            padding: 40px;
+            background: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
 
         .faq-wrapper h2 {
             text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
             margin-bottom: 30px;
-            font-size: 26px;
         }
 
         .faq {
             margin-bottom: 25px;
+            background: #fff;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
         }
 
         .faq h3 {
-            margin-bottom: 8px;
-            font-size: 17px;
-            font-weight: bold;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
         }
 
         .faq p {
             margin: 0;
-            padding-left: 10px;
-            color: #444;
+            color: var(--text-color-light);
             line-height: 1.6;
+        }
+        
+        h2.steps-title {
+            margin-top: 50px;
         }
 
         ol {
             margin-top: 20px;
             padding-left: 20px;
             line-height: 1.8;
+            background: #fff;
+            padding: 25px 25px 25px 45px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
         }
 
         ol li {
-            margin-bottom: 10px;
-            color: #333;
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+
+        ol li:last-child {
+            margin-bottom: 0;
         }
 
         ol li strong {
-            color: #000;
+            color: #1a1a1a;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .faq-wrapper {
-                padding: 25px 20px;
+                margin: 40px 20px;
+                padding: 30px;
             }
-
             .faq-wrapper h2 {
-                font-size: 22px;
+                font-size: 28px;
             }
         }
     </style>
@@ -89,7 +130,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
     </div>
 
     <div class="faq">
-        <h3>Can I return a pet if it doesn’t work out?</h3>
+        <h3>Can I return a pet if it doesn't work out?</h3>
         <p>Yes, most shelters have return policies to ensure the pet's best interests are prioritized.</p>
     </div>
 
@@ -103,7 +144,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
         <p>Yes, but it depends on your living situation and ability to care adequately for multiple pets.</p>
     </div>
 
-    <h2>🐾 Steps to Adopt a Pet</h2>
+    <h2 class="steps-title">🐾 Steps to Adopt a Pet</h2>
     <ol>
         <li><strong>Find a Pet:</strong> Use our filters to find pets that match your preferences.</li>
         <li><strong>Apply:</strong> Fill out the adoption application form online.</li>

@@ -30,54 +30,92 @@ $result = $stmt->get_result();
     <title>Follow-Up Messages</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
+        :root {
+            --text-color: #333;
+            --text-color-light: #555;
+            --container-bg: rgba(255, 255, 255, 0.92);
+            --border-color: #e0e0e0;
+            --shadow: 0 8px 25px rgba(0,0,0,0.1);
+            --border-radius: 16px;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-color);
+        }
+        
         .followup-wrapper {
-            max-width: 900px;
-            margin: 80px auto;
+            max-width: 800px;
+            margin: 80px auto 40px;
             padding: 40px;
-            background-color: #fef9ec;
-            border-radius: 30px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+            background: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
 
         .followup-wrapper h2 {
-            font-size: 26px;
             text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 0;
             margin-bottom: 30px;
-        }
-
-        .followup-wrapper a {
-            display: inline-block;
-            margin-bottom: 20px;
-            text-decoration: none;
-            color: #000;
-            font-weight: 500;
         }
 
         .message-card {
             background-color: #fff;
-            border-radius: 20px;
-            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .message-header p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
         }
 
-        .message-card p {
-            font-size: 14px;
-            margin: 8px 0;
+        .message-card .message-body {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-color-light);
+            margin: 0 0 15px;
         }
 
-        .message-card small {
-            color: #555;
-            font-size: 12px;
+        .message-card .message-footer {
+            text-align: right;
+            color: var(--text-color-light);
+            font-size: 13px;
         }
 
         .empty-msg {
-            background-color: #fff;
-            border-radius: 20px;
-            padding: 20px;
             text-align: center;
+            color: var(--text-color-light);
+            margin-top: 40px;
             font-size: 16px;
+            padding: 30px;
+            background: rgba(255,255,255,0.5);
+            border-radius: var(--border-radius);
         }
     </style>
 </head>
@@ -86,15 +124,19 @@ $result = $stmt->get_result();
 <?php include('../includes/navbar_adopter.php'); ?>
 
 <div class="followup-wrapper">
-    <h2>📩 Follow-Up Messages from Shelters</h2>
+    <h2>📩 Follow-Up Messages</h2>
 
     <?php if ($result->num_rows > 0): ?>
         <?php while($row = $result->fetch_assoc()): ?>
             <div class="message-card">
-                <p><strong>Pet:</strong> <?php echo htmlspecialchars($row['pet_name']); ?></p>
-                <p><strong>Shelter:</strong> <?php echo htmlspecialchars($row['shelter_name']); ?></p>
-                <p><strong>Message:</strong><br><?php echo nl2br(htmlspecialchars($row['message'])); ?></p>
-                <p><small>Sent at: <?php echo date("F j, Y, g:i A", strtotime($row['sent_at'])); ?></small></p>
+                <div class="message-header">
+                    <p><strong>Pet:</strong> <?php echo htmlspecialchars($row['pet_name']); ?></p>
+                    <p><strong>From:</strong> <?php echo htmlspecialchars($row['shelter_name']); ?></p>
+                </div>
+                <p class="message-body"><?php echo nl2br(htmlspecialchars($row['message'])); ?></p>
+                <div class="message-footer">
+                    Sent: <?php echo date("F j, Y, g:i A", strtotime($row['sent_at'])); ?>
+                </div>
             </div>
         <?php endwhile; ?>
     <?php else: ?>
