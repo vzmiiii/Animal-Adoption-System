@@ -46,7 +46,7 @@ function toggleSidebar(event) {
     event.stopPropagation();
     const sidebar = document.getElementById('sidebar');
     const isOpen = sidebar.style.left === '0px';
-    sidebar.style.left = isOpen ? '-250px' : '0px';
+    sidebar.style.left = isOpen ? '-280px' : '0px';
 }
 document.addEventListener('click', function(event) {
     const sidebar = document.getElementById('sidebar');
@@ -54,7 +54,7 @@ document.addEventListener('click', function(event) {
     if (sidebar.style.left === '0px' &&
         !sidebar.contains(event.target) &&
         !toggleButton.contains(event.target)) {
-        sidebar.style.left = '-250px';
+        sidebar.style.left = '-280px';
     }
 });
 </script>

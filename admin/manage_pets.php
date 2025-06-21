@@ -33,35 +33,98 @@ function toggleDir($currentDir) {
     <title>Manage Pets</title>
     <link rel="stylesheet" href="../css/common.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #fff; margin: 0; }
-        .page-wrapper { max-width: 1150px; margin: auto; padding: 30px; }
-        h1 { text-align: center; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2)),
+                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+        }
+
+        .page-wrapper {
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .content-container {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            margin-top: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #2c3e50;
+            font-size: 2.8em;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 30px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
+
         th, td {
-            padding: 10px;
+            padding: 18px 15px;
             text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
+
         th {
-            background-color: #f5f5f5;
+            background: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         th a {
             text-decoration: none;
-            color: inherit;
+            color: white;
+            transition: opacity 0.2s;
         }
+
+        th a:hover {
+            opacity: 0.8;
+        }
+
+        tr:last-of-type td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: rgba(110, 214, 165, 0.1);
+        }
+
         .actions a {
-            margin-right: 10px;
+            margin-right: 12px;
             text-decoration: none;
-            color: #007bff;
+            color: #4e8cff;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
         }
+
         .actions a:hover {
-            text-decoration: underline;
+            background: #4e8cff;
+            color: white;
         }
     </style>
 </head>
@@ -69,40 +132,42 @@ function toggleDir($currentDir) {
 <?php include('../includes/navbar_admin.php'); ?>
 
 <div class="page-wrapper">
-    <h1>Manage All Pets</h1>
+    <div class="content-container">
+        <h1>Manage All Pets</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <?php foreach ($allowed_sort as $column): ?>
-                    <th>
-                        <a href="?sort=<?= $column ?>&dir=<?= toggleDir($order_dir) ?>">
-                            <?= ucwords(str_replace('_', ' ', $column)) ?>
-                        </a>
-                    </th>
-                <?php endforeach; ?>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php while ($row = $result->fetch_assoc()): ?>
-            <tr>
-                <td><?= $row['id'] ?></td>
-                <td><?= htmlspecialchars($row['name']) ?></td>
-                <td><?= htmlspecialchars($row['species']) ?></td>
-                <td><?= htmlspecialchars($row['breed']) ?></td>
-                <td><?= $row['age'] ?></td>
-                <td><?= htmlspecialchars($row['gender']) ?></td>
-                <td><?= ucfirst(htmlspecialchars($row['status'])) ?></td>
-                <td><?= htmlspecialchars($row['shelter_name']) ?></td>
-                <td class="actions">
-                    <a href="edit_pet.php?id=<?= $row['id'] ?>">Edit</a>
-                    <a href="delete_pet.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this pet?')">Delete</a>
-                </td>
-            </tr>
-        <?php endwhile; ?>
-        </tbody>
-    </table>
+        <table>
+            <thead>
+                <tr>
+                    <?php foreach ($allowed_sort as $column): ?>
+                        <th>
+                            <a href="?sort=<?= $column ?>&dir=<?= toggleDir($order_dir) ?>">
+                                <?= ucwords(str_replace('_', ' ', $column)) ?>
+                            </a>
+                        </th>
+                    <?php endforeach; ?>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?= $row['id'] ?></td>
+                    <td><?= htmlspecialchars($row['name']) ?></td>
+                    <td><?= htmlspecialchars($row['species']) ?></td>
+                    <td><?= htmlspecialchars($row['breed']) ?></td>
+                    <td><?= $row['age'] ?></td>
+                    <td><?= htmlspecialchars($row['gender']) ?></td>
+                    <td><?= ucfirst(htmlspecialchars($row['status'])) ?></td>
+                    <td><?= htmlspecialchars($row['shelter_name']) ?></td>
+                    <td class="actions">
+                        <a href="edit_pet.php?id=<?= $row['id'] ?>">Edit</a>
+                        <a href="delete_pet.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this pet?')">Delete</a>
+                    </td>
+                </tr>
+            <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
 <?php include('../includes/footer.php'); ?>
 </body>
