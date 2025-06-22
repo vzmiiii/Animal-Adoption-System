@@ -7,7 +7,7 @@
     background: linear-gradient(to right, #f4f6f8, #dde1e7);
     color: #444;
     text-align: center;
-    padding: 18px 10px 14px 10px;
+    padding: 25px 10px 20px 10px;
     font-size: 15px;
     font-family: 'Segoe UI', Arial, sans-serif;
     margin-top: auto;

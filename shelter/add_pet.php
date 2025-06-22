@@ -170,11 +170,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div class="form-group">
                 <label for="species">Species:</label>
-                <input type="text" name="species" id="species" required>
+                <select name="species" id="species" required>
+                    <option value="" disabled selected>-- Select Species --</option>
+                    <option value="Dog">Dog</option>
+                    <option value="Cat">Cat</option>
+                    <option value="Reptile">Reptile</option>
+                    <option value="Small Mammal">Small Mammal</option>
+                    <option value="Bird">Bird</option>
+                    <option value="Exotic Pet">Exotic Pet</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="breed">Breed:</label>
-                <input type="text" name="breed" id="breed" required>
+                <select name="breed" id="breed" required>
+                    <option value="" disabled selected>-- Select Species First --</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="age">Age (in years):</label>
@@ -202,5 +212,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <?php include('../includes/footer.php'); ?>
+
+<script>
+// Breed options for each species
+const breedOptions = {
+    'Dog': [
+        'Golden Retriever', 'Labrador Retriever', 'German Shepherd', 'Bulldog', 'Beagle',
+        'Poodle', 'Rottweiler', 'Yorkshire Terrier', 'Boxer', 'Dachshund',
+        'Siberian Husky', 'Great Dane', 'Doberman', 'Shih Tzu', 'Chihuahua',
+        'Border Collie', 'Australian Shepherd', 'Bernese Mountain Dog', 'Cavalier King Charles Spaniel', 'Pomeranian'
+    ],
+    'Cat': [
+        'Persian', 'Maine Coon', 'Siamese', 'British Shorthair', 'Ragdoll',
+        'Bengal', 'Abyssinian', 'Russian Blue', 'Sphynx', 'Norwegian Forest Cat',
+        'American Shorthair', 'Exotic Shorthair', 'Birman', 'Oriental Shorthair', 'Turkish Van',
+        'Scottish Fold', 'Devon Rex', 'Cornish Rex', 'Himalayan', 'Burmese'
+    ],
+    'Reptile': [
+        'Bearded Dragon', 'Leopard Gecko', 'Ball Python', 'Corn Snake', 'Green Iguana',
+        'Crested Gecko', 'Blue Tongue Skink', 'Red-Eared Slider Turtle', 'Painted Turtle', 'Chameleon',
+        'Anole', 'Uromastyx', 'Tegu', 'Monitor Lizard', 'Tortoise'
+    ],
+    'Small Mammal': [
+        'Hamster', 'Guinea Pig', 'Rabbit', 'Ferret', 'Chinchilla',
+        'Gerbil', 'Mouse', 'Rat', 'Hedgehog', 'Sugar Glider',
+        'Degu', 'Dwarf Hamster', 'Syrian Hamster', 'Netherland Dwarf Rabbit', 'Holland Lop'
+    ],
+    'Bird': [
+        'Budgerigar (Budgie)', 'Cockatiel', 'African Grey Parrot', 'Macaw', 'Cockatoo',
+        'Canary', 'Finch', 'Lovebird', 'Conure', 'Amazon Parrot',
+        'Quaker Parrot', 'Eclectus Parrot', 'Senegal Parrot', 'Pionus Parrot', 'Lorikeet'
+    ],
+    'Exotic Pet': [
+        'Sugar Glider', 'Fennec Fox', 'Capybara', 'Kinkajou', 'Serval',
+        'Wallaby', 'Skunk', 'Raccoon', 'Squirrel Monkey', 'Pygmy Goat',
+        'Miniature Horse', 'Alpaca', 'Llama', 'Pot-Bellied Pig', 'Axolotl'
+    ]
+};
+
+// Function to update breed options based on selected species
+function updateBreedOptions() {
+    const speciesSelect = document.getElementById('species');
+    const breedSelect = document.getElementById('breed');
+    const selectedSpecies = speciesSelect.value;
+    
+    // Clear current options
+    breedSelect.innerHTML = '<option value="" disabled selected>-- Select Breed --</option>';
+    
+    // Add new options based on selected species
+    if (selectedSpecies && breedOptions[selectedSpecies]) {
+        breedOptions[selectedSpecies].forEach(breed => {
+            const option = document.createElement('option');
+            option.value = breed;
+            option.textContent = breed;
+            breedSelect.appendChild(option);
+        });
+    }
+}
+
+// Add event listener to species select
+document.addEventListener('DOMContentLoaded', function() {
+    const speciesSelect = document.getElementById('species');
+    speciesSelect.addEventListener('change', updateBreedOptions);
+});
+</script>
+
 </body>
 </html>
