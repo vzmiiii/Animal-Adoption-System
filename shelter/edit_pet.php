@@ -182,7 +182,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="content-container">
     <div class="form-container">
         <div class="form-header">
-            <h2>Edit Pet - <?php echo htmlspecialchars($pet['name']); ?></h2>
+        <h2>Edit Pet - <?php echo htmlspecialchars($pet['name']); ?></h2>
         </div>
         <form method="post" enctype="multipart/form-data">
             <div class="form-group">
@@ -208,9 +208,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="form-group">
                 <label for="gender">Gender:</label>
                 <select id="gender" name="gender">
-                    <option value="Male" <?php if ($pet['gender'] === 'Male') echo 'selected'; ?>>Male</option>
-                    <option value="Female" <?php if ($pet['gender'] === 'Female') echo 'selected'; ?>>Female</option>
-                </select>
+                <option value="Male" <?php if ($pet['gender'] === 'Male') echo 'selected'; ?>>Male</option>
+                <option value="Female" <?php if ($pet['gender'] === 'Female') echo 'selected'; ?>>Female</option>
+            </select>
             </div>
 
             <div class="form-group">

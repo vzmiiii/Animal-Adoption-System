@@ -155,7 +155,7 @@ $result = $stmt->get_result();
             color: #fff;
             box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3);
             transform: translateY(-2px);
-        }
+            }
         .button {
             display: inline-block;
             padding: 10px 20px;
@@ -167,7 +167,7 @@ $result = $stmt->get_result();
             border: 1px solid #ddd;
             transition: all 0.3s ease;
             text-align: center;
-        }
+            }
         .button:hover {
             background-image: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
             color: #fff;
@@ -199,8 +199,8 @@ $result = $stmt->get_result();
                     <div class="pet-card-body">
                         <h3><?php echo htmlspecialchars($pet['name']); ?></h3>
                         <p class="pet-breed"><?php echo htmlspecialchars($pet['species']); ?> - <?php echo htmlspecialchars($pet['breed']); ?></p>
-                        <p><strong>Age:</strong> <?php echo htmlspecialchars($pet['age']); ?> years</p>
-                        <p><strong>Gender:</strong> <?php echo htmlspecialchars($pet['gender']); ?></p>
+                    <p><strong>Age:</strong> <?php echo htmlspecialchars($pet['age']); ?> years</p>
+                    <p><strong>Gender:</strong> <?php echo htmlspecialchars($pet['gender']); ?></p>
                         <p class="pet-description"><?php echo nl2br(htmlspecialchars($pet['description'])); ?></p>
                     </div>
                     <div class="pet-card-footer">

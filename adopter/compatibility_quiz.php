@@ -13,7 +13,6 @@ $form_submitted = false;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $form_submitted = true;
-    // Collect answers
     $lifestyle = $_POST['lifestyle'];
     $home_type = $_POST['home_type'];
     $experience = $_POST['experience'];
@@ -23,40 +22,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $noise_level = $_POST['noise_level'];
     $likes_cuddle = $_POST['likes_cuddle'];
 
-    // Base SQL with JOIN to get shelter name
     $sql = "SELECT p.*, u.username AS shelter_name
             FROM pets p
             JOIN users u ON p.shelter_id = u.id
             WHERE p.status = 'available'";
 
-    // Lifestyle affects species
     if ($lifestyle === "active") {
         $sql .= " AND p.species = 'Dog'";
     } elseif ($lifestyle === "quiet") {
         $sql .= " AND p.species = 'Cat'";
     }
 
-    // Home type affects species and age/size compatibility
     if (in_array($home_type, ["highrise", "flat"])) {
-        $sql .= " AND (p.species != 'Dog' OR p.age <= 5)"; // no large dogs in small homes
+        $sql .= " AND (p.species != 'Dog' OR p.age <= 5)";
     }
 
-    // Experience level affects ease of handling
     if ($experience === "first_time") {
         $sql .= " AND p.age <= 3";
     }
 
-    // Kids should be paired with younger, gentler pets
     if ($has_kids === "yes") {
         $sql .= " AND p.age <= 5";
     }
 
-    // Gender preference
     if ($preferred_gender !== "no_pref") {
         $sql .= " AND p.gender = '" . $conn->real_escape_string($preferred_gender) . "'";
     }
 
-    // Age range
     if ($preferred_age === "young") {
         $sql .= " AND p.age <= 2";
     } elseif ($preferred_age === "adult") {
@@ -65,19 +57,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql .= " AND p.age > 7";
     }
 
-    // Noise preference
     if ($noise_level === "quiet") {
         $sql .= " AND p.species = 'Cat'";
     }
 
-    // Cuddly pets assumed to be younger and calmer
     if ($likes_cuddle === "yes") {
         $sql .= " AND p.age <= 4";
     }
 
-    // Execute query
     $result = $conn->query($sql);
-    if($result) {
+    if ($result) {
         while ($row = $result->fetch_assoc()) {
             $suggestions[] = $row;
         }
@@ -120,7 +109,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background: var(--container-bg);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255,255,255,0.4);
         }
@@ -133,7 +121,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-top: 0;
             margin-bottom: 30px;
         }
-        
+
         .section-title {
             grid-column: 1 / -1;
             text-align: center;
@@ -169,7 +157,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border-radius: 10px;
             border: 1px solid var(--border-color);
             font-size: 15px;
-            box-sizing: border-box;
             background-color: #fff;
         }
 
@@ -187,7 +174,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-top: 10px;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        
+
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
@@ -198,7 +185,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding-top: 30px;
             border-top: 1px solid var(--border-color);
         }
-        
+
         .recommended-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -228,7 +215,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             height: 200px;
             object-fit: cover;
         }
-        
+
         .pet-card-content {
             padding: 20px;
             flex-grow: 1;
@@ -241,14 +228,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin: 0 0 8px;
             font-size: 22px;
         }
-        
+
         .pet-card p {
             margin: 2px 0;
             font-size: 14px;
             color: var(--text-color-light);
             line-height: 1.5;
         }
-        
+
         .pet-card .description {
             flex-grow: 1;
             margin-top: 10px;
@@ -265,7 +252,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: bold;
             text-align: center;
         }
-        
+
         .empty-msg {
             text-align: center;
             color: var(--text-color-light);
@@ -277,7 +264,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 <body>
-
 <?php include('../includes/navbar_adopter.php'); ?>
 
 <div class="page-wrapper">
@@ -348,6 +334,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <option value="no">No, I prefer an independent pet</option>
             </select>
         </div>
+
+        <!-- JS Suggestion Preview -->
+        <div id="jsSuggestionBox" style="grid-column: 1 / -1; padding: 15px; background: #f9f9f9; border-radius: 10px; display: none; border: 1px solid #ccc; margin-bottom: 10px;">
+            <strong>JavaScript Suggestion:</strong>
+            <p id="jsSuggestionText" style="margin: 0;"></p>
+        </div>
+
         <button type="submit">Find My Match</button>
     </form>
 
@@ -366,11 +359,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="pet-card-content">
                                 <h3><?= htmlspecialchars($pet['name']) ?></h3>
                                 <p><?= htmlspecialchars($pet['breed']) ?></p>
-                                <p class="description">
-                                    <?= htmlspecialchars($pet['age']) ?> years old |
-                                    <?= htmlspecialchars($pet['gender']) ?> |
-                                    <?= htmlspecialchars($pet['species']) ?>
-                                </p>
+                                <p class="description"><?= htmlspecialchars($pet['age']) ?> years old | <?= htmlspecialchars($pet['gender']) ?> | <?= htmlspecialchars($pet['species']) ?></p>
                                 <p><strong>Shelter:</strong> <?= htmlspecialchars($pet['shelter_name']) ?></p>
                                 <a href="view_pet.php?id=<?= $pet['id'] ?>" class="adopt-btn">View Details</a>
                             </div>
@@ -383,6 +372,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     <?php endif; ?>
 </div>
+
 <?php include('../includes/footer.php'); ?>
+
+<!-- JavaScript for live compatibility suggestion -->
+<script>
+function getSuggestion() {
+    const lifestyle = document.getElementById("lifestyle").value;
+    const homeType = document.getElementById("home_type").value;
+    const experience = document.getElementById("experience").value;
+    const hasKids = document.getElementById("has_kids").value;
+    const noise = document.getElementById("noise_level").value;
+    const cuddle = document.getElementById("likes_cuddle").value;
+
+    let score = 0;
+    if (lifestyle === "active") score += 3; else score += 1;
+    if (homeType === "bungalow" || homeType === "terrace") score += 3; else score += 1;
+    if (experience === "experienced") score += 2; else score += 1;
+    if (hasKids === "yes") score += 2;
+    if (noise === "quiet") score += 1; else score += 3;
+    if (cuddle === "yes") score += 2;
+
+    let suggestion = "Small pets like hamsters, rabbits, or cats";
+    if (score >= 12) suggestion = "High-energy dogs (e.g., Retrievers, Huskies)";
+    else if (score >= 9) suggestion = "Cats or calm dogs (e.g., Beagle, Shih Tzu)";
+
+    document.getElementById("jsSuggestionText").innerText = suggestion;
+    document.getElementById("jsSuggestionBox").style.display = "block";
+}
+document.querySelectorAll("select").forEach(select => {
+    select.addEventListener("change", getSuggestion);
+});
+</script>
+
 </body>
 </html>
+
