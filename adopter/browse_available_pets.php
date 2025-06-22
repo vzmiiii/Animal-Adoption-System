@@ -59,18 +59,6 @@ $result = $conn->query($sql);
         --shadow: 0 5px 15px rgba(0,0,0,0.08);
         --border-radius: 12px;
     }
-
-    body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
-                    url('../images/PetsBackground2.jpg') no-repeat center center fixed;
-        background-size: cover;
-        color: var(--text-color);
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
     .page-wrapper {
         border-radius: 20px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);

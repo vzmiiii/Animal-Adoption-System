@@ -23,10 +23,12 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="../css/sidebar.css">
     <style>
         body {
-            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2)),
                         url('../images/PetsBackground2.jpg') no-repeat center center fixed;
             background-size: cover;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #333;
         }
         .content-container {
             max-width: 1200px;

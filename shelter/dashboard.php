@@ -29,11 +29,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shelter') {
 
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2)),
                         url('../images/PetsBackground2.jpg') no-repeat center center fixed;
             background-size: cover;
-            color: var(--text-color);
+            color: #333;
         }
 
         .dashboard-wrapper {

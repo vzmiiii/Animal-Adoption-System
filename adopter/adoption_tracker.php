@@ -41,16 +41,6 @@ $result = $stmt->get_result();
             --shadow: 0 8px 25px rgba(0,0,0,0.1);
             --border-radius: 16px;
         }
-
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
-                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: var(--text-color);
-        }
-
         .tracker-wrapper {
             max-width: 900px;
             margin: 80px auto 40px;

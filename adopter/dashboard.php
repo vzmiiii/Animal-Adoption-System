@@ -25,20 +25,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'adopter') {
         html {
             height: 100%;
         }
-
-        body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2)),
-                        url('../images/PetsBackground2.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #333;
-        }
-
         .main-content {
             flex: 1 0 auto;
             display: flex;
