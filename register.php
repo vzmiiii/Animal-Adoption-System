@@ -186,7 +186,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <input type="text" name="first_name" placeholder="First Name" value="<?= htmlspecialchars($first_name ?? '') ?>" required>
         <input type="text" name="last_name" placeholder="Last Name" value="<?= htmlspecialchars($last_name ?? '') ?>" required>
         <input type="email" name="email" placeholder="Email" value="<?= htmlspecialchars($email ?? '') ?>" required>
-        <input type="text" name="phone" placeholder="Phone Number" value="<?= htmlspecialchars($phone ?? '') ?>" required>
+        <input type="text" name="phone" placeholder="Phone Number" 
+            value="<?= htmlspecialchars($phone ?? '') ?>" 
+            required maxlength="12" pattern="\d{8,12}" 
+            title="Please enter a 8 to 12-digit phone number.">
         <input type="password" name="password" placeholder="Password" required>
         <input type="password" name="confirm_password" placeholder="Confirm Password" required>
         <button type="submit">Register</button>

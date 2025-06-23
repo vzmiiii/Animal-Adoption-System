@@ -18,8 +18,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $description = trim($_POST['description']);
     $shelter_id = $_SESSION['user_id'];
 
+    // ✅ Age validation
+    if (!is_numeric($age) || $age < 0) {
+        $msg = "Age must be a positive number.";
+        $msg_class = "error";
+    }
+
     $image = '';
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+    if (empty($msg) && isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
         $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
         $allowed = ['jpg', 'jpeg', 'png'];
         if (in_array($ext, $allowed)) {
@@ -190,7 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div class="form-group">
                 <label for="age">Age (in years):</label>
-                <input type="number" name="age" id="age" required>
+                <input type="number" name="age" id="age" required min="0">
             </div>
             <div class="form-group">
                 <label for="gender">Gender:</label>

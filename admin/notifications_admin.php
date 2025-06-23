@@ -1,4 +1,22 @@
 <?php
+// AJAX endpoint for fetching users by role (must be before any output)
+if (isset($_GET['fetch_users']) && isset($_GET['role'])) {
+    include('../db_connection.php');
+    $role = $_GET['role'];
+    $users = [];
+    $sql = "SELECT id, CONCAT(first_name, ' ', last_name) AS name, email FROM users WHERE role = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $role);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $users[] = $row;
+    }
+    header('Content-Type: application/json');
+    echo json_encode($users);
+    exit();
+}
+
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
@@ -10,28 +28,40 @@ $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $audience = $_POST['audience'];
     $message = trim($_POST['message']);
+    $user_ids = isset($_POST['user_ids']) ? $_POST['user_ids'] : [];
 
     if (!empty($message)) {
-        $role_filter = "";
-        if ($audience === 'adopter') {
-            $role_filter = "WHERE role = 'adopter'";
-        } elseif ($audience === 'shelter') {
-            $role_filter = "WHERE role = 'shelter'";
+        if ($audience === 'all') {
+            $user_sql = "SELECT id FROM users";
+            $users = $conn->query($user_sql);
+            $stmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
+            while ($row = $users->fetch_assoc()) {
+                $stmt->bind_param("is", $row['id'], $message);
+                $stmt->execute();
+            }
+            $msg = "Notification sent successfully to all users.";
+        } else {
+            if (!empty($user_ids) && is_array($user_ids)) {
+                $stmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
+                foreach ($user_ids as $uid) {
+                    $uid = intval($uid);
+                    $stmt->bind_param("is", $uid, $message);
+                    $stmt->execute();
+                }
+                $msg = "Notification sent successfully to selected users.";
+            } else {
+                $msg = "Please select at least one user.";
+            }
         }
-
-        $user_sql = "SELECT id FROM users $role_filter";
-        $users = $conn->query($user_sql);
-
-        $stmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
-        while ($row = $users->fetch_assoc()) {
-            $stmt->bind_param("is", $row['id'], $message);
-            $stmt->execute();
-        }
-
-        $msg = "Notification sent successfully to " . $audience . "s.";
     } else {
         $msg = "Message cannot be empty.";
     }
+    // To prevent resubmission on refresh
+    echo '<script>window.location.href = window.location.pathname + "?msg=" + encodeURIComponent("' . $msg . '");</script>';
+    exit();
+}
+if (isset($_GET['msg'])) {
+    $msg = $_GET['msg'];
 }
 ?>
 
@@ -107,6 +137,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 0 10px rgba(110, 214, 165, 0.2);
         }
 
+        .multi-select {
+            height: 120px;
+        }
+
         button {
             width: 100%;
             padding: 16px 24px;
@@ -135,6 +169,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-align: center;
         }
     </style>
+    <script>
+    function fetchUsers(role) {
+        if (role === 'all') {
+            document.getElementById('user-select-group').style.display = 'none';
+            return;
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'notifications_admin.php?fetch_users=1&role=' + encodeURIComponent(role), true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var users = JSON.parse(xhr.responseText);
+                var select = document.getElementById('user_ids');
+                select.innerHTML = '';
+                users.forEach(function(user) {
+                    var opt = document.createElement('option');
+                    opt.value = user.id;
+                    opt.textContent = user.name + ' (' + user.email + ')';
+                    select.appendChild(opt);
+                });
+                document.getElementById('user-select-group').style.display = 'block';
+            }
+        };
+        xhr.send();
+    }
+    window.onload = function() {
+        var audience = document.getElementById('audience');
+        audience.addEventListener('change', function() {
+            fetchUsers(this.value);
+        });
+        // On page load, if not 'all', fetch users
+        if (audience.value !== 'all') {
+            fetchUsers(audience.value);
+        } else {
+            document.getElementById('user-select-group').style.display = 'none';
+        }
+    };
+    </script>
 </head>
 <body>
 <?php include('../includes/navbar_admin.php'); ?>
@@ -144,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Send Notification</h1>
 
         <?php if ($msg): ?>
-            <div class="message"><?= $msg ?></div>
+            <div class="message"><?= htmlspecialchars($msg) ?></div>
         <?php endif; ?>
 
         <form method="post">
@@ -154,10 +225,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <option value="adopter">Adopters Only</option>
                 <option value="shelter">Shelter Personnel Only</option>
             </select>
-
+            <div id="user-select-group" style="display:none;">
+                <label for="user_ids">Select Users (hold Ctrl or Cmd to select multiple):</label>
+                <select name="user_ids[]" id="user_ids" class="multi-select" multiple></select>
+            </div>
             <label for="message">Notification Message:</label>
             <textarea name="message" id="message" rows="5" required></textarea>
-
             <button type="submit">Send Notification</button>
         </form>
     </div>

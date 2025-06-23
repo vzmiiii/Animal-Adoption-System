@@ -327,7 +327,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <!-- JS Suggestion Preview -->
         <div id="jsSuggestionBox" style="grid-column: 1 / -1; padding: 15px; background: #f9f9f9; border-radius: 10px; display: none; border: 1px solid #ccc; margin-bottom: 10px;">
-            <strong>JavaScript Suggestion:</strong>
+            <strong>Pet Suggestions:</strong>
             <p id="jsSuggestionText" style="margin: 0;"></p>
         </div>
 

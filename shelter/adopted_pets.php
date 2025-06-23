@@ -107,6 +107,8 @@ $result = $stmt->get_result();
         .pet-card-footer {
             margin-top: auto;
             padding-top: 1rem;
+            display: flex;
+            justify-content: center;
         }
         .button {
             display: block;

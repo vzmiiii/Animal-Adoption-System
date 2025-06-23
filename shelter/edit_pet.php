@@ -27,17 +27,24 @@ if ($result->num_rows !== 1) {
 }
 
 $pet = $result->fetch_assoc();
+$msg = "";
+$msg_class = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
-    $species = $_POST['species'];
-    $breed = $_POST['breed'];
-    $age = $_POST['age'];
+    $name = trim($_POST['name']);
+    $species = trim($_POST['species']);
+    $breed = trim($_POST['breed']);
+    $age = intval($_POST['age']);
     $gender = $_POST['gender'];
-    $description = $_POST['description'];
-
+    $description = trim($_POST['description']);
     $update_image = $pet['image'];
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+
+    if ($age < 0) {
+        $msg = "Age must be a non-negative number.";
+        $msg_class = "error";
+    }
+
+    if (empty($msg) && isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
         $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
         $allowed = ['jpg', 'jpeg', 'png'];
         if (in_array(strtolower($ext), $allowed)) {
@@ -52,16 +59,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    $update_sql = "UPDATE pets SET name=?, species=?, breed=?, age=?, gender=?, description=?, image=? WHERE id=? AND shelter_id=?";
-    $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("sssisssii", $name, $species, $breed, $age, $gender, $description, $update_image, $pet_id, $shelter_id);
-    
-    if ($update_stmt->execute()) {
-        header("Location: manage_pet_profiles.php?status=updated");
-    } else {
-        echo "Error updating record: " . $conn->error;
+    if (empty($msg)) {
+        $update_sql = "UPDATE pets SET name=?, species=?, breed=?, age=?, gender=?, description=?, image=? WHERE id=? AND shelter_id=?";
+        $update_stmt = $conn->prepare($update_sql);
+        $update_stmt->bind_param("sssisssii", $name, $species, $breed, $age, $gender, $description, $update_image, $pet_id, $shelter_id);
+
+        if ($update_stmt->execute()) {
+            header("Location: manage_pet_profiles.php?status=updated");
+            exit();
+        } else {
+            $msg = "Error updating record: " . htmlspecialchars($conn->error);
+            $msg_class = "error";
+        }
     }
-    exit();
 }
 ?>
 
@@ -81,10 +91,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background-size: cover;
             color: #333;
         }
-        .content-container {
-            padding-top: 20px;
-            padding-bottom: 40px;
-        }
         .form-container {
             max-width: 800px;
             margin: 2rem auto;
@@ -92,149 +98,161 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background: rgba(255, 255, 255, 0.92);
             border-radius: 16px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.4);
-        }
-        .form-header h2 {
-            text-align: center;
-            font-size: 32px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-top: 0;
-            margin-bottom: 30px;
         }
         .form-group {
             margin-bottom: 1.5rem;
         }
         .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
             font-weight: 600;
-            color: #444;
         }
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-group input, .form-group select, .form-group textarea {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
+            border: 1px solid #ccc;
             border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            font-size: 15px;
             box-sizing: border-box;
-            background-color: #fff;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #4e8cff;
-            box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.3);
         }
         .button {
-            display: inline-block;
             width: 100%;
-            padding: 15px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            color: #fff;
-            background-image: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            padding: 14px;
+            background: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            color: white;
             border: none;
-            transition: all 0.3s ease;
-            text-align: center;
+            border-radius: 10px;
+            font-weight: bold;
             cursor: pointer;
         }
-        .button:hover {
-            box-shadow: 0 4px 15px rgba(78, 140, 255, 0.4);
-            transform: translateY(-2px);
-        }
-        .button-secondary {
-            display: inline-block;
-            padding: 12px 24px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 15px;
-            color: #444;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-        .button-secondary:hover {
-            background-image: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
-            color: #fff;
-            border-color: transparent;
-            box-shadow: 0 4px 10px rgba(78, 140, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        .back-link-container {
-            text-align: center;
-            margin-top: 1.5rem;
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
 <body>
-
 <?php include('../includes/navbar_shelter.php'); ?>
 
-<div class="content-container">
-    <div class="form-container">
-        <div class="form-header">
-        <h2>Edit Pet - <?php echo htmlspecialchars($pet['name']); ?></h2>
+<div class="form-container">
+    <h2>Edit Pet - <?= htmlspecialchars($pet['name']) ?></h2>
+
+    <?php if (!empty($msg)): ?>
+        <div class="message <?= $msg_class ?>"><?= htmlspecialchars($msg) ?></div>
+    <?php endif; ?>
+
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">Pet Name:</label>
+            <input type="text" name="name" id="name" value="<?= htmlspecialchars($pet['name']) ?>" required>
         </div>
-        <form method="post" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($pet['name']); ?>" required>
-            </div>
 
-            <div class="form-group">
-                <label for="species">Species:</label>
-                <input type="text" id="species" name="species" value="<?php echo htmlspecialchars($pet['species']); ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="breed">Breed:</label>
-                <input type="text" id="breed" name="breed" value="<?php echo htmlspecialchars($pet['breed']); ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="age">Age:</label>
-                <input type="number" id="age" name="age" value="<?php echo htmlspecialchars($pet['age']); ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="gender">Gender:</label>
-                <select id="gender" name="gender">
-                <option value="Male" <?php if ($pet['gender'] === 'Male') echo 'selected'; ?>>Male</option>
-                <option value="Female" <?php if ($pet['gender'] === 'Female') echo 'selected'; ?>>Female</option>
+        <div class="form-group">
+            <label for="species">Species:</label>
+            <select name="species" id="species" required>
+                <option value="">-- Select Species --</option>
+                <?php
+                $speciesOptions = ['Dog', 'Cat', 'Reptile', 'Small Mammal', 'Bird', 'Exotic Pet'];
+                foreach ($speciesOptions as $sp) {
+                    echo "<option value=\"$sp\"" . ($pet['species'] === $sp ? " selected" : "") . ">$sp</option>";
+                }
+                ?>
             </select>
-            </div>
-
-            <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="4"><?php echo htmlspecialchars($pet['description']); ?></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="image">Change Image (optional):</label>
-                <input type="file" id="image" name="image">
-            </div>
-
-            <button type="submit" class="button">Update Pet</button>
-        </form>
-
-        <div class="back-link-container">
-            <a href="manage_pet_profiles.php" class="button-secondary">← Back to Manage Pet Profiles</a>
         </div>
-    </div>
+
+        <div class="form-group">
+            <label for="breed">Breed:</label>
+            <select name="breed" id="breed" required>
+                <option value="">-- Select Breed --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="age">Age (years):</label>
+            <input type="number" name="age" id="age" value="<?= htmlspecialchars($pet['age']) ?>" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label for="gender">Gender:</label>
+            <select name="gender" id="gender" required>
+                <option value="Male" <?= $pet['gender'] === 'Male' ? 'selected' : '' ?>>Male</option>
+                <option value="Female" <?= $pet['gender'] === 'Female' ? 'selected' : '' ?>>Female</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea name="description" id="description" rows="4" required><?= htmlspecialchars($pet['description']) ?></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="image">Change Image (optional):</label>
+            <input type="file" name="image" id="image">
+        </div>
+
+        <button type="submit" class="button">Update Pet</button>
+    </form>
 </div>
 
-<?php include('../includes/footer.php'); ?>
+<script>
+// Breed options by species
+const breedOptions = {
+    'Dog': [
+        'Golden Retriever', 'Labrador Retriever', 'German Shepherd', 'Bulldog', 'Beagle',
+        'Poodle', 'Rottweiler', 'Yorkshire Terrier', 'Boxer', 'Dachshund',
+        'Siberian Husky', 'Great Dane', 'Doberman', 'Shih Tzu', 'Chihuahua',
+        'Border Collie', 'Australian Shepherd', 'Bernese Mountain Dog', 'Cavalier King Charles Spaniel', 'Pomeranian'
+    ],
+    'Cat': [
+        'Persian', 'Maine Coon', 'Siamese', 'British Shorthair', 'Ragdoll',
+        'Bengal', 'Abyssinian', 'Russian Blue', 'Sphynx', 'Norwegian Forest Cat',
+        'American Shorthair', 'Exotic Shorthair', 'Birman', 'Oriental Shorthair', 'Turkish Van',
+        'Scottish Fold', 'Devon Rex', 'Cornish Rex', 'Himalayan', 'Burmese'
+    ],
+    'Reptile': [
+        'Bearded Dragon', 'Leopard Gecko', 'Ball Python', 'Corn Snake', 'Green Iguana',
+        'Crested Gecko', 'Blue Tongue Skink', 'Red-Eared Slider Turtle', 'Painted Turtle', 'Chameleon',
+        'Anole', 'Uromastyx', 'Tegu', 'Monitor Lizard', 'Tortoise'
+    ],
+    'Small Mammal': [
+        'Hamster', 'Guinea Pig', 'Rabbit', 'Ferret', 'Chinchilla',
+        'Gerbil', 'Mouse', 'Rat', 'Hedgehog', 'Sugar Glider',
+        'Degu', 'Dwarf Hamster', 'Syrian Hamster', 'Netherland Dwarf Rabbit', 'Holland Lop'
+    ],
+    'Bird': [
+        'Budgerigar (Budgie)', 'Cockatiel', 'African Grey Parrot', 'Macaw', 'Cockatoo',
+        'Canary', 'Finch', 'Lovebird', 'Conure', 'Amazon Parrot',
+        'Quaker Parrot', 'Eclectus Parrot', 'Senegal Parrot', 'Pionus Parrot', 'Lorikeet'
+    ],
+    'Exotic Pet': [
+        'Sugar Glider', 'Fennec Fox', 'Capybara', 'Kinkajou', 'Serval',
+        'Wallaby', 'Skunk', 'Raccoon', 'Squirrel Monkey', 'Pygmy Goat',
+        'Miniature Horse', 'Alpaca', 'Llama', 'Pot-Bellied Pig', 'Axolotl'
+    ]
+};
 
+function updateBreeds() {
+    const species = document.getElementById('species').value;
+    const breedSelect = document.getElementById('breed');
+    const currentBreed = "<?= htmlspecialchars($pet['breed']) ?>";
+
+    breedSelect.innerHTML = '<option value="">-- Select Breed --</option>';
+
+    if (breedOptions[species]) {
+        breedOptions[species].forEach(breed => {
+            const opt = document.createElement('option');
+            opt.value = breed;
+            opt.textContent = breed;
+            if (breed === currentBreed) opt.selected = true;
+            breedSelect.appendChild(opt);
+        });
+    }
+}
+
+document.getElementById('species').addEventListener('change', updateBreeds);
+window.onload = updateBreeds;
+</script>
 </body>
 </html>
+

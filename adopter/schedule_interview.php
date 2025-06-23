@@ -27,22 +27,29 @@ if ($result->num_rows !== 1) {
 }
 $data = $result->fetch_assoc();
 
+$error = "";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $datetime = $_POST['interview_datetime'];
+    $now = date('Y-m-d\TH:i');
 
-    $insert = $conn->prepare("INSERT INTO interviews (application_id, adopter_id, shelter_id, pet_id, interview_datetime) VALUES (?, ?, ?, ?, ?)");
-    $insert->bind_param("iiiis", $app_id, $_SESSION['user_id'], $data['shelter_id'], $data['pet_id'], $datetime);
-    if ($insert->execute()) {
-        // Notify shelter
-        $msg = "New interview scheduled for pet: " . $data['pet_name'];
-        $notif = $conn->prepare("INSERT INTO notifications (user_id, role, message) VALUES (?, 'shelter', ?)");
-        $notif->bind_param("is", $data['shelter_id'], $msg);
-        $notif->execute();
-
-        header("Location: adoption_tracker.php");
-        exit();
+    if ($datetime < $now) {
+        $error = "Interview date and time must be in the future.";
     } else {
-        echo "Error scheduling interview.";
+        $insert = $conn->prepare("INSERT INTO interviews (application_id, adopter_id, shelter_id, pet_id, interview_datetime) VALUES (?, ?, ?, ?, ?)");
+        $insert->bind_param("iiiis", $app_id, $_SESSION['user_id'], $data['shelter_id'], $data['pet_id'], $datetime);
+        if ($insert->execute()) {
+            // Notify shelter
+            $msg = "New interview scheduled for pet: " . $data['pet_name'];
+            $notif = $conn->prepare("INSERT INTO notifications (user_id, role, message) VALUES (?, 'shelter', ?)");
+            $notif->bind_param("is", $data['shelter_id'], $msg);
+            $notif->execute();
+
+            header("Location: adoption_tracker.php");
+            exit();
+        } else {
+            $error = "Error scheduling interview.";
+        }
     }
 }
 ?>
@@ -65,6 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             --shadow: 0 8px 25px rgba(0,0,0,0.1);
             --border-radius: 16px;
         }
+
         .schedule-wrapper {
             max-width: 600px;
             margin: 80px auto 40px;
@@ -72,7 +80,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background: var(--container-bg);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255,255,255,0.4);
         }
@@ -85,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-top: 0;
             margin-bottom: 30px;
         }
-        
+
         form {
             display: flex;
             flex-direction: column;
@@ -107,13 +114,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border: 1px solid var(--border-color);
             font-size: 15px;
             box-sizing: border-box;
-            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         input[type="datetime-local"]:focus {
             outline: none;
             border-color: #6ed6a5;
             box-shadow: 0 0 0 3px rgba(110, 214, 165, 0.18);
+        }
+
+        .error-message {
+            background: #ffe6e6;
+            color: #b00020;
+            border: 1px solid #f5c2c7;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         button {
@@ -127,10 +147,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: 600;
             font-size: 16px;
             cursor: pointer;
-            margin-top: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
-        
+
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
@@ -143,9 +161,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <div class="schedule-wrapper">
     <h2>📅 Schedule Interview for <?= htmlspecialchars($data['pet_name']) ?></h2>
+
+    <?php if (!empty($error)): ?>
+        <div class="error-message"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+
     <form method="POST">
         <label for="interview_datetime">Select a date and time for your interview:</label>
-        <input type="datetime-local" id="interview_datetime" name="interview_datetime" required>
+        <input type="datetime-local" id="interview_datetime" name="interview_datetime"
+               required min="<?= date('Y-m-d\TH:i'); ?>">
         <button type="submit">Confirm Interview Slot</button>
     </form>
 </div>

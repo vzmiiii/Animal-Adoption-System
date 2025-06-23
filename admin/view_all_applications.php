@@ -114,6 +114,31 @@ $result = $conn->query($sql);
             color: #b98b00;
             background: rgba(255, 193, 7, 0.15);
         }
+
+        .status-toggle-group {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+        .status-toggle {
+            padding: 10px 28px;
+            border-radius: 30px;
+            border: 1.5px solid #dde1e7;
+            background: #fff;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            outline: none;
+        }
+        .status-toggle.active, .status-toggle:hover {
+            background: linear-gradient(90deg, #6ed6a5 0%, #4e8cff 100%);
+            color: #fff;
+            border-color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -123,7 +148,14 @@ $result = $conn->query($sql);
     <div class="content-container">
         <h1>All Adoption Applications</h1>
 
-        <table>
+        <div class="status-toggle-group">
+            <button class="status-toggle active" data-status="all">All</button>
+            <button class="status-toggle" data-status="approved">Approved</button>
+            <button class="status-toggle" data-status="pending">Pending</button>
+            <button class="status-toggle" data-status="rejected">Rejected</button>
+        </div>
+
+        <table id="applications-table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -136,7 +168,7 @@ $result = $conn->query($sql);
             </thead>
             <tbody>
             <?php while ($row = $result->fetch_assoc()): ?>
-                <tr>
+                <tr data-status="<?= strtolower(htmlspecialchars($row['status'])) ?>">
                     <td><?= $row['id'] ?></td>
                     <td><?= htmlspecialchars($row['adopter_name']) ?></td>
                     <td><?= htmlspecialchars($row['pet_name']) ?></td>
@@ -150,5 +182,21 @@ $result = $conn->query($sql);
     </div>
 </div>
 <?php include('../includes/footer.php'); ?>
+<script>
+document.querySelectorAll('.status-toggle').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.status-toggle').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const status = this.getAttribute('data-status');
+        document.querySelectorAll('#applications-table tbody tr').forEach(row => {
+            if (status === 'all' || row.getAttribute('data-status') === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>
