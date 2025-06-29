@@ -19,10 +19,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $msg = "All fields are required.";
         $msg_class = "error";
     } else {
+        // Get pet name for notification message
+        $pet_sql = "SELECT name FROM pets WHERE id = ?";
+        $pet_stmt = $conn->prepare($pet_sql);
+        $pet_stmt->bind_param("i", $pet_id);
+        $pet_stmt->execute();
+        $pet_result = $pet_stmt->get_result();
+        $pet_name = $pet_result->fetch_assoc()['name'];
+        
         $insert = $conn->prepare("INSERT INTO follow_ups (pet_id, adopter_id, message) VALUES (?, ?, ?)");
         $insert->bind_param("iis", $pet_id, $adopter_id, $message);
         
         if ($insert->execute()) {
+            // Create notification for the adopter
+            $notif_message = "You have received a follow-up message from the shelter regarding " . $pet_name;
+            $notif = $conn->prepare("INSERT INTO notifications (user_id, role, message) VALUES (?, 'adopter', ?)");
+            $notif->bind_param("is", $adopter_id, $notif_message);
+            $notif->execute();
+            
             $msg = "Follow-up message sent successfully!";
             $msg_class = "success";
         } else {

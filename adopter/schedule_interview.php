@@ -27,6 +27,14 @@ if ($result->num_rows !== 1) {
 }
 $data = $result->fetch_assoc();
 
+// Check if there's already a rejected interview for this application
+$checkRejectedInterview = $conn->prepare("SELECT id FROM interviews WHERE application_id = ? AND status = 'rejected'");
+$checkRejectedInterview->bind_param("i", $app_id);
+$checkRejectedInterview->execute();
+$rejectedInterviewResult = $checkRejectedInterview->get_result();
+$hasRejectedInterview = $rejectedInterviewResult->num_rows > 0;
+$isRescheduling = $hasRejectedInterview;
+
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -36,19 +44,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($datetime < $now) {
         $error = "Interview date and time must be in the future.";
     } else {
-        $insert = $conn->prepare("INSERT INTO interviews (application_id, adopter_id, shelter_id, pet_id, interview_datetime) VALUES (?, ?, ?, ?, ?)");
-        $insert->bind_param("iiiis", $app_id, $_SESSION['user_id'], $data['shelter_id'], $data['pet_id'], $datetime);
-        if ($insert->execute()) {
-            // Notify shelter
-            $msg = "New interview scheduled for pet: " . $data['pet_name'];
-            $notif = $conn->prepare("INSERT INTO notifications (user_id, role, message) VALUES (?, 'shelter', ?)");
-            $notif->bind_param("is", $data['shelter_id'], $msg);
-            $notif->execute();
+        if ($isRescheduling) {
+            // Update existing rejected interview
+            $update = $conn->prepare("UPDATE interviews SET interview_datetime = ?, status = 'pending' WHERE application_id = ? AND status = 'rejected'");
+            $update->bind_param("si", $datetime, $app_id);
+            if ($update->execute()) {
+                // Notify shelter about rescheduled interview
+                $msg = "Interview rescheduled for pet: " . $data['pet_name'];
+                $notif = $conn->prepare("INSERT INTO notifications (user_id, role, message) VALUES (?, 'shelter', ?)");
+                $notif->bind_param("is", $data['shelter_id'], $msg);
+                $notif->execute();
 
-            header("Location: adoption_tracker.php");
-            exit();
+                header("Location: adoption_tracker.php");
+                exit();
+            } else {
+                $error = "Error rescheduling interview.";
+            }
         } else {
-            $error = "Error scheduling interview.";
+            // Create new interview
+            $insert = $conn->prepare("INSERT INTO interviews (application_id, adopter_id, shelter_id, pet_id, interview_datetime) VALUES (?, ?, ?, ?, ?)");
+            $insert->bind_param("iiiis", $app_id, $_SESSION['user_id'], $data['shelter_id'], $data['pet_id'], $datetime);
+            if ($insert->execute()) {
+                // Notify shelter
+                $msg = "New interview scheduled for pet: " . $data['pet_name'];
+                $notif = $conn->prepare("INSERT INTO notifications (user_id, role, message) VALUES (?, 'shelter', ?)");
+                $notif->bind_param("is", $data['shelter_id'], $msg);
+                $notif->execute();
+
+                header("Location: adoption_tracker.php");
+                exit();
+            } else {
+                $error = "Error scheduling interview.";
+            }
         }
     }
 }
@@ -58,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Schedule Interview</title>
+    <title><?= $isRescheduling ? 'Reschedule Interview' : 'Schedule Interview' ?></title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/adopter.css">
     <link rel="stylesheet" href="../css/sidebar.css">
@@ -160,7 +187,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <?php include('../includes/navbar_adopter.php'); ?>
 
 <div class="schedule-wrapper">
-    <h2>📅 Schedule Interview for <?= htmlspecialchars($data['pet_name']) ?></h2>
+    <h2><?= $isRescheduling ? '🔄 Reschedule' : '📅 Schedule' ?> Interview for <?= htmlspecialchars($data['pet_name']) ?></h2>
+
+    <?php if ($isRescheduling): ?>
+        <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #ffeaa7;">
+            <strong>Rescheduling Notice:</strong> You are rescheduling a previously rejected interview. Please select a new date and time.
+        </div>
+    <?php endif; ?>
 
     <?php if (!empty($error)): ?>
         <div class="error-message"><?= htmlspecialchars($error) ?></div>
@@ -170,7 +203,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <label for="interview_datetime">Select a date and time for your interview:</label>
         <input type="datetime-local" id="interview_datetime" name="interview_datetime"
                required min="<?= date('Y-m-d\TH:i'); ?>">
-        <button type="submit">Confirm Interview Slot</button>
+        <button type="submit"><?= $isRescheduling ? 'Confirm Rescheduled Interview' : 'Confirm Interview Slot' ?></button>
     </form>
 </div>
 

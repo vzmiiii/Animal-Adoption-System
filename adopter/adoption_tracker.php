@@ -174,12 +174,13 @@ $result = $stmt->get_result();
             <?php while ($row = $result->fetch_assoc()):
                 $application_id = $row['id'];
 
-                // Check interview
-                $checkInterview = $conn->prepare("SELECT id FROM interviews WHERE application_id = ?");
+                // Check interview status
+                $checkInterview = $conn->prepare("SELECT id, status FROM interviews WHERE application_id = ?");
                 $checkInterview->bind_param("i", $application_id);
                 $checkInterview->execute();
                 $interviewResult = $checkInterview->get_result();
                 $hasInterview = $interviewResult->num_rows > 0;
+                $interviewStatus = $hasInterview ? $interviewResult->fetch_assoc()['status'] : null;
 
                 $status = strtolower($row['status']);
                 $status_class = "status-text " . $status;
@@ -197,6 +198,8 @@ $result = $stmt->get_result();
                             </form>
                         <?php elseif ($status === 'approved' && !$hasInterview): ?>
                             <a href="schedule_interview.php?app_id=<?= $application_id; ?>" class="action-btn schedule-btn">Schedule Interview</a>
+                        <?php elseif ($status === 'approved' && $hasInterview && $interviewStatus === 'rejected'): ?>
+                            <a href="schedule_interview.php?app_id=<?= $application_id; ?>" class="action-btn schedule-btn">Reschedule Interview</a>
                         <?php else: ?>
                             <span>—</span>
                         <?php endif; ?>

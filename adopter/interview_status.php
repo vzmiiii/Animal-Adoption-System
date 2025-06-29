@@ -11,7 +11,7 @@ include('../db_connection.php');
 
 $adopter_id = $_SESSION['user_id'];
 
-$sql = "SELECT i.*, p.name AS pet_name, u.username AS shelter_name
+$sql = "SELECT i.*, p.name AS pet_name, u.username AS shelter_name, i.application_id
         FROM interviews i
         JOIN pets p ON i.pet_id = p.id
         JOIN users u ON i.shelter_id = u.id
@@ -115,6 +115,29 @@ $result = $stmt->get_result();
             background-color: #ffe6e6;
         }
 
+        .status-text.rejected {
+            color: #a82222;
+            background-color: #ffe6e6;
+        }
+
+        .action-btn {
+            color: #fff;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            background: var(--accent-gradient);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
         .empty-msg {
             text-align: center;
             color: var(--text-color-light);
@@ -140,6 +163,7 @@ $result = $stmt->get_result();
                 <th>Shelter</th>
                 <th>Date & Time</th>
                 <th>Status</th>
+                <th>Action</th>
             </tr>
             <?php while ($row = $result->fetch_assoc()):
                 $status = strtolower($row['status']);
@@ -150,6 +174,13 @@ $result = $stmt->get_result();
                     <td><?= htmlspecialchars($row['shelter_name']) ?></td>
                     <td><?= date("F j, Y, g:i A", strtotime($row['interview_datetime'])) ?></td>
                     <td><span class="<?= $status_class ?>"><?= ucfirst($status) ?></span></td>
+                    <td>
+                        <?php if ($status === 'rejected'): ?>
+                            <a href="schedule_interview.php?app_id=<?= $row['application_id'] ?>" class="action-btn">Reschedule</a>
+                        <?php else: ?>
+                            <span>—</span>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endwhile; ?>
         </table>

@@ -32,23 +32,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($message)) {
         if ($audience === 'all') {
-            $user_sql = "SELECT id FROM users";
+            // Get all users with their roles
+            $user_sql = "SELECT id, role FROM users";
             $users = $conn->query($user_sql);
-            $stmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
+            $stmt = $conn->prepare("INSERT INTO notifications (user_id, message, role, created_at, is_read) VALUES (?, ?, ?, NOW(), 0)");
+            $inserted_count = 0;
             while ($row = $users->fetch_assoc()) {
-                $stmt->bind_param("is", $row['id'], $message);
-                $stmt->execute();
+                $stmt->bind_param("iss", $row['id'], $message, $row['role']);
+                if ($stmt->execute()) {
+                    $inserted_count++;
+                }
             }
-            $msg = "Notification sent successfully to all users.";
+            $msg = "Notification sent successfully to $inserted_count users.";
         } else {
             if (!empty($user_ids) && is_array($user_ids)) {
-                $stmt = $conn->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)");
-                foreach ($user_ids as $uid) {
-                    $uid = intval($uid);
-                    $stmt->bind_param("is", $uid, $message);
-                    $stmt->execute();
+                // Get selected users with their roles
+                $placeholders = str_repeat('?,', count($user_ids) - 1) . '?';
+                $user_sql = "SELECT id, role FROM users WHERE id IN ($placeholders)";
+                $user_stmt = $conn->prepare($user_sql);
+                $user_stmt->bind_param(str_repeat('i', count($user_ids)), ...$user_ids);
+                $user_stmt->execute();
+                $user_result = $user_stmt->get_result();
+                
+                $stmt = $conn->prepare("INSERT INTO notifications (user_id, message, role, created_at, is_read) VALUES (?, ?, ?, NOW(), 0)");
+                $inserted_count = 0;
+                while ($row = $user_result->fetch_assoc()) {
+                    $stmt->bind_param("iss", $row['id'], $message, $row['role']);
+                    if ($stmt->execute()) {
+                        $inserted_count++;
+                    }
                 }
-                $msg = "Notification sent successfully to selected users.";
+                $msg = "Notification sent successfully to $inserted_count users.";
             } else {
                 $msg = "Please select at least one user.";
             }
@@ -70,6 +84,7 @@ if (isset($_GET['msg'])) {
 <head>
     <title>Send Notifications</title>
     <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <style>
         body {
             margin: 0;
@@ -82,7 +97,7 @@ if (isset($_GET['msg'])) {
 
         .page-wrapper {
             padding: 40px 20px;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
         }
 

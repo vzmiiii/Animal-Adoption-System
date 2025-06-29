@@ -25,14 +25,31 @@ if ($result->num_rows !== 1) {
 $pet = $result->fetch_assoc();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Delete related adoption applications first
+    // Step 0: Delete follow-up messages related to this pet
+    $del_followups = $conn->prepare("DELETE FROM follow_ups WHERE pet_id = ?");
+    $del_followups->bind_param("i", $pet_id);
+    $del_followups->execute();
+
+    // Step 1: Delete interviews linked to adoption applications for this pet
+    $del_interviews = $conn->prepare("
+        DELETE FROM interviews 
+        WHERE application_id IN (
+            SELECT id FROM adoption_applications WHERE pet_id = ?
+        )
+    ");
+    $del_interviews->bind_param("i", $pet_id);
+    $del_interviews->execute();
+
+    // Step 2: Delete adoption applications for this pet
     $del_apps = $conn->prepare("DELETE FROM adoption_applications WHERE pet_id = ?");
     $del_apps->bind_param("i", $pet_id);
     $del_apps->execute();
-    // Delete pet
+
+    // Step 3: Delete the pet itself
     $del_stmt = $conn->prepare("DELETE FROM pets WHERE id = ?");
     $del_stmt->bind_param("i", $pet_id);
     $del_stmt->execute();
+
     header("Location: manage_pets.php?deleted=1");
     exit();
 }
@@ -154,4 +171,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 <?php include('../includes/footer.php'); ?>
 </body>
-</html> 
+</html>
