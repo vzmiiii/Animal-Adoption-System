@@ -172,11 +172,11 @@ This will:
 
 > *(These are sample accounts for testing in a local environment)*
 
-| Role       | Username     | Password    |
-|------------|--------------|-------------|
-| Adopter    | adopter01    | test123     |
-| Shelter    | shelter01    | test123     |
-| Admin      | admin01      | test123     |
+| Role       | Email                            | Password       |
+|------------|----------------------------------|----------------|
+| Adopter    | azmisahi@gmail.com               | azmisahi       |
+| Shelter    | fluffyfriendsrescue@gmail.com    | fluffyfriends  |
+| Admin      | admin01@test .com                | admin123       |
 
 ---
 
