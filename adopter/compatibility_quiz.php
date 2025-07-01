@@ -22,53 +22,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $noise_level = $_POST['noise_level'];
     $likes_cuddle = $_POST['likes_cuddle'];
 
-    $sql = "SELECT p.*, u.username AS shelter_name
-            FROM pets p
-            JOIN users u ON p.shelter_id = u.id
-            WHERE p.status = 'available'";
+    // Start with all species
+    $all_species = ['Cat', 'Dog', 'Reptile', 'Small Mammal', 'Bird', 'Exotic Pet'];
+    $allowed_species = $all_species;
 
-    if ($lifestyle === "active") {
-        $sql .= " AND p.species = 'Dog'";
-    } elseif ($lifestyle === "quiet") {
-        $sql .= " AND p.species = 'Cat'";
+    // Lifestyle
+    if ($lifestyle === 'active') {
+        $allowed_species = array_intersect($allowed_species, ['Cat', 'Dog']);
+    } else {
+        $allowed_species = array_intersect($allowed_species, ['Cat', 'Reptile', 'Small Mammal', 'Bird', 'Exotic Pet']);
+    }
+    // Home Type
+    if (in_array($home_type, ['apartment', 'flat', 'highrise', 'Flat', 'High-Rise Apartment'])) {
+        $allowed_species = array_intersect($allowed_species, ['Cat', 'Reptile', 'Small Mammal', 'Bird', 'Exotic Pet']);
+    }
+    // Experience
+    if ($experience === 'first_time') {
+        $allowed_species = array_intersect($allowed_species, ['Cat', 'Small Mammal', 'Reptile']);
+    }
+    // Children
+    if ($has_kids === 'yes') {
+        $allowed_species = array_diff($allowed_species, ['Exotic Pet']);
+    }
+    // Quiet
+    if ($noise_level === 'quiet') {
+        $allowed_species = array_intersect($allowed_species, ['Reptile', 'Small Mammal', 'Bird', 'Exotic Pet']);
+    }
+    // Cuddly
+    if ($likes_cuddle === 'yes') {
+        $allowed_species = array_intersect($allowed_species, ['Cat', 'Dog']);
+    } else {
+        $allowed_species = array_diff($allowed_species, ['Cat', 'Dog']);
     }
 
-    if (in_array($home_type, ["highrise", "flat"])) {
-        $sql .= " AND (p.species != 'Dog' OR p.age <= 5)";
-    }
-
-    if ($experience === "first_time") {
-        $sql .= " AND p.age <= 3";
-    }
-
-    if ($has_kids === "yes") {
-        $sql .= " AND p.age <= 5";
-    }
-
-    if ($preferred_gender !== "no_pref") {
-        $sql .= " AND p.gender = '" . $conn->real_escape_string($preferred_gender) . "'";
-    }
-
-    if ($preferred_age === "young") {
-        $sql .= " AND p.age <= 2";
-    } elseif ($preferred_age === "adult") {
-        $sql .= " AND p.age > 2 AND p.age <= 7";
-    } elseif ($preferred_age === "senior") {
-        $sql .= " AND p.age > 7";
-    }
-
-    if ($noise_level === "quiet") {
-        $sql .= " AND p.species = 'Cat'";
-    }
-
-    if ($likes_cuddle === "yes") {
-        $sql .= " AND p.age <= 4";
-    }
-
-    $result = $conn->query($sql);
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $suggestions[] = $row;
+    // Build SQL
+    if (empty($allowed_species)) {
+        $suggestions = [];
+    } else {
+        $species_sql = implode(",", array_map(function($s) use ($conn) { return "'" . $conn->real_escape_string($s) . "'"; }, $allowed_species));
+        $sql = "SELECT p.*, u.username AS shelter_name
+                FROM pets p
+                JOIN users u ON p.shelter_id = u.id
+                WHERE p.status = 'available' AND p.species IN ($species_sql)";
+        if ($preferred_gender && $preferred_gender !== 'no_pref') {
+            $sql .= " AND p.gender = '" . $conn->real_escape_string($preferred_gender) . "'";
+        }
+        if ($preferred_age) {
+            if ($preferred_age === 'young') {
+                $sql .= " AND p.age <= 2";
+            } elseif ($preferred_age === 'adult') {
+                $sql .= " AND p.age > 2 AND p.age <= 7";
+            } elseif ($preferred_age === 'senior') {
+                $sql .= " AND p.age > 7";
+            }
+        }
+        $result = $conn->query($sql);
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $suggestions[] = $row;
+            }
         }
     }
 }
@@ -93,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             --border-radius: 16px;
         }
         .page-wrapper {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 80px auto 40px;
             padding: 40px;
             background: var(--container-bg);
@@ -178,7 +190,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .recommended-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 30px;
         }
 
@@ -251,6 +263,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background: rgba(255,255,255,0.5);
             border-radius: var(--border-radius);
         }
+
+        @media (max-width: 992px) {
+            .recommended-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .recommended-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -265,6 +288,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <label for="lifestyle">What's your lifestyle like?</label>
             <select id="lifestyle" name="lifestyle" required>
+                <option value="">-- Select --</option>
                 <option value="active">Active & Outdoorsy</option>
                 <option value="quiet">Calm & Indoors</option>
             </select>
@@ -272,6 +296,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <label for="home_type">What's your home type?</label>
             <select id="home_type" name="home_type" required>
+                <option value="">-- Select --</option>
                 <option value="bungalow">Bungalow</option>
                 <option value="terrace">Terrace</option>
                 <option value="highrise">High-Rise Apartment</option>
@@ -281,6 +306,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <label for="experience">What's your experience with pets?</label>
             <select id="experience" name="experience" required>
+                <option value="">-- Select --</option>
                 <option value="first_time">First-time Pet Owner</option>
                 <option value="experienced">Experienced</option>
             </select>
@@ -288,6 +314,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <label for="has_kids">Do you have children at home?</label>
             <select id="has_kids" name="has_kids" required>
+                <option value="">-- Select --</option>
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
             </select>
@@ -297,6 +324,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <label for="preferred_gender">Preferred pet gender?</label>
             <select id="preferred_gender" name="preferred_gender" required>
+                <option value="">-- Select --</option>
                 <option value="no_pref">No Preference</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -305,6 +333,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <label for="preferred_age">Preferred pet age?</label>
             <select id="preferred_age" name="preferred_age" required>
+                <option value="">-- Select --</option>
                 <option value="young">Young (0-2 years)</option>
                 <option value="adult">Adult (3-7 years)</option>
                 <option value="senior">Senior (8+ years)</option>
@@ -313,6 +342,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <label for="noise_level">Do you prefer a quiet pet?</label>
             <select id="noise_level" name="noise_level" required>
+                <option value="">-- Select --</option>
                 <option value="quiet">Yes, peace and quiet is a must</option>
                 <option value="any">A little noise is fine</option>
             </select>
@@ -320,6 +350,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <label for="likes_cuddle">Do you want a cuddly pet?</label>
             <select id="likes_cuddle" name="likes_cuddle" required>
+                <option value="">-- Select --</option>
                 <option value="yes">Yes, give me all the cuddles!</option>
                 <option value="no">No, I prefer an independent pet</option>
             </select>
@@ -333,6 +364,96 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <button type="submit">Find My Match</button>
     </form>
+
+    <?php if (!$form_submitted): ?>
+    <div id="live-suggestions"></div>
+    <script>
+    function getSuggestion() {
+        let allowed = ['Cat', 'Dog', 'Reptile', 'Small Mammal', 'Bird', 'Exotic Pet'];
+        const lifestyle = document.getElementById("lifestyle").value;
+        const homeType = document.getElementById("home_type").value;
+        const experience = document.getElementById("experience").value;
+        const hasKids = document.getElementById("has_kids").value;
+        const gender = document.getElementById("preferred_gender").value;
+        const age = document.getElementById("preferred_age").value;
+        const noise = document.getElementById("noise_level").value;
+        const cuddle = document.getElementById("likes_cuddle").value;
+
+        if (lifestyle === "active") {
+            allowed = allowed.filter(s => s === "Cat" || s === "Dog");
+        } else if (lifestyle === "quiet") {
+            allowed = allowed.filter(s => ["Cat", "Reptile", "Small Mammal", "Bird", "Exotic Pet"].includes(s));
+        }
+        if (["apartment", "flat", "highrise", "High-Rise Apartment"].includes(homeType)) {
+            allowed = allowed.filter(s => ["Cat", "Reptile", "Small Mammal", "Bird", "Exotic Pet"].includes(s));
+        }
+        if (experience === "first_time") {
+            allowed = allowed.filter(s => ["Cat", "Small Mammal", "Reptile"].includes(s));
+        }
+        if (hasKids === "yes") {
+            allowed = allowed.filter(s => s !== "Exotic Pet");
+        }
+        if (noise === "quiet") {
+            allowed = allowed.filter(s => ["Reptile", "Small Mammal", "Bird", "Exotic Pet"].includes(s));
+        }
+        if (cuddle === "yes") {
+            allowed = allowed.filter(s => s === "Cat" || s === "Dog");
+        } else if (cuddle === "no") {
+            allowed = allowed.filter(s => s !== "Cat" && s !== "Dog");
+        }
+
+        let suggestion = "No pets matched your criteria. Try adjusting your preferences!";
+        if (allowed.length === 6) suggestion = "All pet types are suitable for you!";
+        else if (allowed.length === 0) suggestion = "No pets matched your criteria. Try adjusting your preferences!";
+        else suggestion = "Suggested pets: " + allowed.join(", ");
+
+        document.getElementById("jsSuggestionText").innerText = suggestion;
+        document.getElementById("jsSuggestionBox").style.display = "block";
+    }
+    document.querySelectorAll("select").forEach(select => {
+        select.addEventListener("change", getSuggestion);
+    });
+
+    // Live pet suggestions
+    function fetchLiveSuggestions() {
+        const lifestyle = document.getElementById("lifestyle").value;
+        const homeType = document.getElementById("home_type").value;
+        const experience = document.getElementById("experience").value;
+        const hasKids = document.getElementById("has_kids").value;
+        const preferredGender = document.getElementById("preferred_gender").value;
+        const preferredAge = document.getElementById("preferred_age").value;
+        const noise = document.getElementById("noise_level").value;
+        const cuddle = document.getElementById("likes_cuddle").value;
+        let score = 0;
+        if (lifestyle === "active") score += 3; else score += 1;
+        if (homeType === "bungalow" || homeType === "terrace") score += 3; else score += 1;
+        if (experience === "experienced") score += 2; else score += 1;
+        if (hasKids === "yes") score += 2;
+        if (noise === "quiet") score += 1; else score += 3;
+        if (cuddle === "yes") score += 2;
+        let suggestion = "small";
+        if (score >= 12) suggestion = "high_energy_dog";
+        else if (score >= 9) suggestion = "cat_calm_dog";
+        // Send all form data + suggestion category
+        const params = new URLSearchParams({
+            suggestion,
+            preferred_gender: preferredGender,
+            preferred_age: preferredAge,
+            noise_level: noise,
+            likes_cuddle: cuddle
+        });
+        fetch('quiz_suggestions.php?' + params.toString())
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('live-suggestions').innerHTML = html;
+            });
+    }
+    document.querySelectorAll('form select').forEach(select => {
+        select.addEventListener('change', fetchLiveSuggestions);
+    });
+    window.addEventListener('DOMContentLoaded', fetchLiveSuggestions);
+    </script>
+    <?php endif; ?>
 
     <?php if ($form_submitted): ?>
         <div class="results-wrapper">
@@ -364,36 +485,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <?php include('../includes/footer.php'); ?>
-
-<!-- JavaScript for live compatibility suggestion -->
-<script>
-function getSuggestion() {
-    const lifestyle = document.getElementById("lifestyle").value;
-    const homeType = document.getElementById("home_type").value;
-    const experience = document.getElementById("experience").value;
-    const hasKids = document.getElementById("has_kids").value;
-    const noise = document.getElementById("noise_level").value;
-    const cuddle = document.getElementById("likes_cuddle").value;
-
-    let score = 0;
-    if (lifestyle === "active") score += 3; else score += 1;
-    if (homeType === "bungalow" || homeType === "terrace") score += 3; else score += 1;
-    if (experience === "experienced") score += 2; else score += 1;
-    if (hasKids === "yes") score += 2;
-    if (noise === "quiet") score += 1; else score += 3;
-    if (cuddle === "yes") score += 2;
-
-    let suggestion = "Small pets like hamsters, rabbits, or cats";
-    if (score >= 12) suggestion = "High-energy dogs (e.g., Retrievers, Huskies)";
-    else if (score >= 9) suggestion = "Cats or calm dogs (e.g., Beagle, Shih Tzu)";
-
-    document.getElementById("jsSuggestionText").innerText = suggestion;
-    document.getElementById("jsSuggestionBox").style.display = "block";
-}
-document.querySelectorAll("select").forEach(select => {
-    select.addEventListener("change", getSuggestion);
-});
-</script>
 
 </body>
 </html>

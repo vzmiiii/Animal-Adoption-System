@@ -22,7 +22,14 @@ if (!empty($min_age)) $where .= " AND pets.age >= " . intval($min_age);
 if (!empty($shelter)) $where .= " AND users.username LIKE '%" . $conn->real_escape_string($shelter) . "%'";
 if (!empty($keyword)) {
     $escaped = $conn->real_escape_string($keyword);
-    $where .= " AND (pets.name LIKE '%$escaped%' OR pets.breed LIKE '%$escaped%' OR pets.description LIKE '%$escaped%')";
+    // Smart keyword: split into words, each must match any field
+    $words = preg_split('/\s+/', $escaped);
+    foreach ($words as $word) {
+        $word = trim($word);
+        if ($word === '') continue;
+        $like = "%$word%";
+        $where .= " AND (pets.name LIKE '$like' OR pets.breed LIKE '$like' OR pets.description LIKE '$like' OR pets.species LIKE '$like' OR pets.gender LIKE '$like' OR users.username LIKE '$like')";
+    }
 }
 
 // Count for pagination
@@ -30,6 +37,16 @@ $count_sql = "SELECT COUNT(*) AS total FROM pets JOIN users ON pets.shelter_id =
 $count_result = $conn->query($count_sql);
 $total_pets = $count_result->fetch_assoc()['total'];
 $total_pages = ceil($total_pets / $limit);
+
+// Fetch all active shelter usernames for dropdown
+$shelter_options = [];
+$shelter_sql = "SELECT DISTINCT username FROM users WHERE role='shelter' AND status='active' ORDER BY username ASC";
+$shelter_result = $conn->query($shelter_sql);
+if ($shelter_result) {
+    while ($row = $shelter_result->fetch_assoc()) {
+        $shelter_options[] = $row['username'];
+    }
+}
 
 // Main data query
 $sql = "SELECT pets.*, users.username AS shelter_name
@@ -387,20 +404,25 @@ $result = $conn->query($sql);
         <a href="adoption_tracker.php">📋 Adoption Tracker</a>
     </div>
 
-    <form method="get">
+    <form method="get" id="filter-form">
         <div class="input-group">
-            <input type="text" name="keyword" placeholder="Search keyword..." value="<?= htmlspecialchars($keyword) ?>">
-            <select name="type">
+            <input type="text" id="keyword" name="keyword" placeholder="Search keyword..." value="<?= htmlspecialchars($keyword) ?>">
+            <select name="type" id="type">
                 <option value="">All Types</option>
                 <?php
-                $types = ['Cat', 'Dog', 'Bird', 'Reptiles', 'Small Mammals', 'Exotic Animals'];
+                $types = ['Cat', 'Dog', 'Bird', 'Reptile', 'Small Mammal', 'Exotic Animal'];
                 foreach ($types as $option) {
                     echo "<option value=\"$option\"" . ($type === $option ? ' selected' : '') . ">$option</option>";
                 }
                 ?>
             </select>
-            <input type="number" name="min_age" min="0" placeholder="Min Age" value="<?= htmlspecialchars($min_age) ?>">
-            <input type="text" name="shelter" placeholder="Shelter name" value="<?= htmlspecialchars($shelter) ?>">
+            <input type="number" id="min_age" name="min_age" min="0" placeholder="Min Age" value="<?= htmlspecialchars($min_age) ?>">
+            <select name="shelter" id="shelter">
+                <option value="">All Shelters</option>
+                <?php foreach ($shelter_options as $option): ?>
+                    <option value="<?= htmlspecialchars($option) ?>" <?= $shelter === $option ? 'selected' : '' ?>><?= htmlspecialchars($option) ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
         <div class="form-buttons">
             <button type="submit">Filter</button>
@@ -408,6 +430,7 @@ $result = $conn->query($sql);
         </div>
     </form>
 
+    <div id="pet-grid-ajax">
     <div class="pet-grid">
         <?php if ($result && $result->num_rows > 0): ?>
             <?php while ($row = $result->fetch_assoc()): ?>
@@ -432,7 +455,6 @@ $result = $conn->query($sql);
             <p style="text-align:center;">No pets available right now.</p>
         <?php endif; ?>
     </div>
-
     <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
@@ -448,6 +470,40 @@ $result = $conn->query($sql);
             <?php endif; ?>
         </div>
     <?php endif; ?>
+    </div>
+    <script>
+    // Live search for keyword
+    const keywordInput = document.getElementById('keyword');
+    const petGridAjax = document.getElementById('pet-grid-ajax');
+    const typeInput = document.getElementById('type');
+    const minAgeInput = document.getElementById('min_age');
+    const shelterInput = document.getElementById('shelter');
+    let lastRequest = null;
+    function fetchPets() {
+        const params = new URLSearchParams({
+            keyword: keywordInput.value,
+            type: typeInput.value,
+            min_age: minAgeInput.value,
+            shelter: shelterInput.value
+        });
+        if (lastRequest) lastRequest.abort();
+        lastRequest = new XMLHttpRequest();
+        lastRequest.open('GET', 'search_pets.php?' + params.toString(), true);
+        lastRequest.onreadystatechange = function() {
+            if (lastRequest.readyState === 4 && lastRequest.status === 200) {
+                petGridAjax.innerHTML = lastRequest.responseText;
+            }
+        };
+        lastRequest.send();
+    }
+    keywordInput.addEventListener('input', function() {
+        fetchPets();
+    });
+    // Optionally, add live search for other filters too:
+    // typeInput.addEventListener('change', fetchPets);
+    // minAgeInput.addEventListener('input', fetchPets);
+    // shelterInput.addEventListener('change', fetchPets);
+    </script>
 </div>
 
 <?php include('../includes/footer.php'); ?>
